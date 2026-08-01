@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-  const { notes, detail } = req.body;
+  const { notes, detail, image } = req.body;
 
   const detailInstructions = {
     quick: "Make the guide 2-3 concise sections. Make 5 flashcards. Keep points short.",
@@ -7,6 +7,37 @@ export default async function handler(req, res) {
     detailed: "Make the guide 5-8 thorough sections, each with 4-6 detailed points explaining concepts fully, including examples where relevant. Make 10-15 flashcards covering nuances, not just definitions."
   };
   const instruction = detailInstructions[detail] || detailInstructions.standard;
+  const jsonInstruction = `Return ONLY valid JSON (no markdown, no backticks) in this exact shape:
+{"guide":[{"heading":"...", "points":["...","..."]}], "flashcards":[{"q":"...","a":"..."}]}
+${instruction}`;
+
+  let body;
+  if (image) {
+    body = {
+      model: "meta-llama/llama-4-scout-17b-16e-instruct",
+      messages: [{
+        role: "user",
+        content: [
+          { type: "text", text: `You are a study assistant. Look at this image of notes and create a study guide and flashcards from it. ${jsonInstruction}` },
+          { type: "image_url", image_url: { url: image } }
+        ]
+      }],
+      temperature: 0.5,
+      max_tokens: 3000
+    };
+  } else {
+    body = {
+      model: "llama-3.3-70b-versatile",
+      messages: [{
+        role: "user",
+        content: `You are a study assistant. Given these notes, create a study guide and flashcards. ${jsonInstruction}
+Notes:
+"""${notes}"""`
+      }],
+      temperature: 0.5,
+      max_tokens: 3000
+    };
+  }
 
   const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
@@ -14,22 +45,10 @@ export default async function handler(req, res) {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
     },
-    body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
-      messages: [{
-        role: "user",
-        content: `You are a study assistant. Given these notes, return ONLY valid JSON (no markdown, no backticks) in this exact shape:
-{"guide":[{"heading":"...", "points":["...","..."]}], "flashcards":[{"q":"...","a":"..."}]}
-${instruction}
-Notes:
-"""${notes}"""`
-      }],
-      temperature: 0.5,
-      max_tokens: 3000
-    })
+    body: JSON.stringify(body)
   });
 
   const data = await response.json();
-  const text = data.choices[0].message.content;
+  const text = data.choices?.[0]?.message?.content || "";
   res.status(200).json({ content: [{ text }] });
 }
