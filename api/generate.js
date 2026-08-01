@@ -20,14 +20,14 @@ ${instruction}`;
       content.push({ type: "image_url", image_url: { url: img } });
     });
     body = {
-      model: "meta-llama/llama-4-scout-17b-16e-instruct",
+      model: "qwen/qwen3.6-27b",
       messages: [{ role: "user", content }],
       temperature: 0.5,
       max_tokens: 3000
     };
   } else {
     body = {
-      model: "llama-3.3-70b-versatile",
+      model: "openai/gpt-oss-120b",
       messages: [{
         role: "user",
         content: `You are a study assistant. Given these notes, create a study guide and flashcards. ${jsonInstruction}
