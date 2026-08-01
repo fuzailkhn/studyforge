@@ -11,6 +11,8 @@ export default async function handler(req, res) {
 {"guide":[{"heading":"...", "points":["...","..."]}], "flashcards":[{"q":"...","a":"..."}]}
 ${instruction}`;
 
+  const maxTokens = detail === "detailed" ? 4500 : 2200;
+
   let body;
   if (images && images.length > 0) {
     const content = [
@@ -23,7 +25,8 @@ ${instruction}`;
       model: "qwen/qwen3.6-27b",
       messages: [{ role: "user", content }],
       temperature: 0.5,
-      max_tokens: 3000
+      max_tokens: maxTokens,
+      reasoning_effort: "none"
     };
   } else {
     body = {
@@ -35,7 +38,8 @@ Notes:
 """${notes}"""`
       }],
       temperature: 0.5,
-      max_tokens: 3000
+      max_tokens: maxTokens,
+      reasoning_effort: "low"
     };
   }
 
@@ -56,6 +60,6 @@ Notes:
   }
 
   let text = data.choices?.[0]?.message?.content || "";
-text = text.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+  text = text.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
   res.status(200).json({ content: [{ text }], debug: null });
 }
