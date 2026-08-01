@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-  const { notes, detail, image } = req.body;
+  const { notes, detail, images } = req.body;
 
   const detailInstructions = {
     quick: "Make the guide 2-3 concise sections. Make 5 flashcards. Keep points short.",
@@ -12,16 +12,16 @@ export default async function handler(req, res) {
 ${instruction}`;
 
   let body;
-  if (image) {
+  if (images && images.length > 0) {
+    const content = [
+      { type: "text", text: `You are a study assistant. Read the text in these image(s) of notes/document pages and create a study guide and flashcards from what they contain. ${jsonInstruction}` }
+    ];
+    images.forEach(img => {
+      content.push({ type: "image_url", image_url: { url: img } });
+    });
     body = {
       model: "meta-llama/llama-4-scout-17b-16e-instruct",
-      messages: [{
-        role: "user",
-        content: [
-          { type: "text", text: `You are a study assistant. Look at this image of notes and create a study guide and flashcards from it. ${jsonInstruction}` },
-          { type: "image_url", image_url: { url: image } }
-        ]
-      }],
+      messages: [{ role: "user", content }],
       temperature: 0.5,
       max_tokens: 3000
     };
