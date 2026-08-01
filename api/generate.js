@@ -11,7 +11,13 @@ export default async function handler(req, res) {
 {"guide":[{"heading":"...", "points":["...","..."]}], "flashcards":[{"q":"...","a":"..."}]}
 ${instruction}`;
 
-  const maxTokens = detail === "detailed" ? 4500 : 2200;
+ const hasImages = images && images.length > 0;
+let maxTokens;
+if (hasImages) {
+  maxTokens = detail === "detailed" ? 2000 : 1200;
+} else {
+  maxTokens = detail === "detailed" ? 4500 : 2200;
+}
 
   let body;
   if (images && images.length > 0) {
