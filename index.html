@@ -369,13 +369,13 @@ async function renderPdfPagesAsImages(buf, maxPages) {
   const pageCount = Math.min(pdf.numPages, maxPages);
   for (let i = 1; i <= pageCount; i++) {
     const page = await pdf.getPage(i);
-    const viewport = page.getViewport({ scale: 1.5 });
+    const viewport = page.getViewport({ scale: 1.0 });
     const canvas = document.createElement('canvas');
     canvas.width = viewport.width;
     canvas.height = viewport.height;
     const ctx = canvas.getContext('2d');
     await page.render({ canvasContext: ctx, viewport }).promise;
-    images.push(canvas.toDataURL('image/jpeg', 0.85));
+    images.push(canvas.toDataURL('image/jpeg', 0.6));
   }
   return images;
 }
@@ -400,7 +400,7 @@ docInput.addEventListener('change', async () => {
 
       if (text.trim().length < 40) {
         docFname.textContent = "No text layer found — reading as scanned pages...";
-        const images = await renderPdfPagesAsImages(buf.slice(0), 5);
+        const images = await renderPdfPagesAsImages(buf.slice(0), 2);
         docImages = images;
         docFname.textContent = "✓ " + file.name + " (scanned, " + images.length + " page(s))";
       } else {
