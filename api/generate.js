@@ -55,6 +55,7 @@ Notes:
     return res.status(200).json({ content: [{ text: "" }], debug: data });
   }
 
-  const text = data.choices?.[0]?.message?.content || "";
+  let text = data.choices?.[0]?.message?.content || "";
+text = text.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
   res.status(200).json({ content: [{ text }], debug: null });
 }
