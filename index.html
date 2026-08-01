@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>StudyForge — Turn notes into study guides</title>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{
     --bg:#0f1115; --panel:#171a21; --panel2:#1e222b;
@@ -54,7 +57,7 @@
     border:1px solid var(--border); border-radius:8px;
     padding:.55rem .7rem; font-size:.9rem; font-family:inherit;
   }
-  .row{display:flex; justify-content:space-between; align-items:center; margin-top:1rem;}
+  .row{display:flex; justify-content:space-between; align-items:center; margin-top:1rem; flex-wrap:wrap; gap:.6rem;}
   button{
     background:var(--accent); color:#0f1115; border:none;
     padding:.8rem 1.8rem; border-radius:8px; font-size:1rem;
@@ -67,6 +70,7 @@
   .btn-ghost{
     background:transparent; border:1px solid var(--border); color:var(--text);
   }
+  .btn-small{padding:.5rem 1rem; font-size:.85rem;}
   #status, #authStatus{color:var(--muted); font-size:.9rem;}
   #authError{color:#e07b7b; font-size:.85rem; margin-top:.6rem;}
 
@@ -78,6 +82,20 @@
   .topbar span{font-size:.85rem; color:var(--muted);}
   .topbar button{padding:.5rem 1rem; font-size:.85rem;}
 
+  .upload-row{
+    display:flex; gap:.8rem; margin-top:.9rem; flex-wrap:wrap;
+  }
+  .upload-btn{
+    flex:1; min-width:160px; background:var(--panel2); border:1px dashed var(--border);
+    color:var(--muted); border-radius:10px; padding:.9rem; text-align:center;
+    cursor:pointer; font-size:.85rem; transition:border-color .15s, color .15s;
+  }
+  .upload-btn:hover{border-color:var(--accent); color:var(--text);}
+  .upload-btn.active{border-style:solid; border-color:var(--accent2); color:var(--accent2);}
+  .upload-btn input{display:none;}
+  .upload-btn .fname{display:block; margin-top:.3rem; font-size:.75rem; color:var(--text); word-break:break-all;}
+  .clear-file{font-size:.7rem; color:var(--muted); text-decoration:underline; cursor:pointer; margin-left:.4rem;}
+
   .empty{
     text-align:center; color:var(--muted); padding:3rem 1rem;
     border:1px dashed var(--border); border-radius:14px; margin-top:2rem;
@@ -87,9 +105,10 @@
   @keyframes fadeIn{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);}}
   .section-title{
     font-family:Georgia,serif; font-size:1.4rem; margin-bottom:1rem;
-    display:flex; align-items:center; gap:.5rem;
+    display:flex; align-items:center; gap:.5rem; justify-content:space-between;
   }
-  .section-title::before{content:''; width:6px; height:6px; border-radius:50%; background:var(--accent);}
+  .section-title-left{display:flex; align-items:center; gap:.5rem;}
+  .section-title-left::before{content:''; width:6px; height:6px; border-radius:50%; background:var(--accent);}
   .guide-card{
     background:var(--panel); border:1px solid var(--border);
     border-radius:12px; padding:1.2rem 1.5rem; margin-bottom:1rem;
@@ -129,11 +148,45 @@
     font-size:.85rem; border-top:1px solid var(--border);
   }
   .upgrade-card{
-    background:var(--panel); border:1px solid var(--accent);
-    border-radius:14px; padding:2rem; text-align:center; margin-top:2rem;
+    background:linear-gradient(180deg, var(--panel) 0%, var(--panel2) 100%);
+    border:1px solid var(--border);
+    border-radius:18px; padding:2.5rem 2rem; text-align:center; margin-top:2rem;
+    position:relative; overflow:hidden;
   }
-  .upgrade-card h3{font-family:Georgia,serif; font-size:1.4rem; margin:0 0 .5rem;}
-  .upgrade-card p{color:var(--muted); margin:0 0 1.2rem;}
+  .upgrade-card::before{
+    content:''; position:absolute; top:0; left:0; right:0; height:3px;
+    background:linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+  .upgrade-card .tag{
+    display:inline-block; font-size:.72rem; letter-spacing:.5px;
+    color:var(--accent2); background:rgba(123,208,201,0.1);
+    border:1px solid var(--accent2); padding:.3rem .8rem;
+    border-radius:20px; margin-bottom:1rem; text-transform:uppercase;
+  }
+  .upgrade-card h3{font-family:Georgia,serif; font-size:1.5rem; margin:0 0 .4rem;}
+  .upgrade-card .price{
+    font-family:Georgia,serif; font-size:2.6rem; font-weight:700;
+    color:var(--accent); margin:1rem 0 .2rem;
+  }
+  .upgrade-card .price span{font-size:1rem; color:var(--muted); font-weight:400;}
+  .upgrade-card ul{
+    list-style:none; padding:0; margin:1.5rem 0; text-align:left;
+    max-width:280px; margin-left:auto; margin-right:auto;
+  }
+  .upgrade-card li{
+    padding:.5rem 0; color:#d7d5cd; font-size:.9rem;
+    border-bottom:1px solid var(--border); display:flex; align-items:center; gap:.6rem;
+  }
+  .upgrade-card li:last-child{border-bottom:none;}
+  .upgrade-card li::before{content:'✓'; color:var(--accent2); font-weight:700;}
+  .upgrade-card button{
+    font-size:1.05rem; padding:.9rem 2.5rem; margin-top:.5rem;
+    box-shadow:0 4px 20px rgba(79,157,255,0.25);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .upgrade-card button:hover{
+    transform:translateY(-2px); box-shadow:0 6px 26px rgba(79,157,255,0.4); opacity:1;
+  }
   .hidden{display:none;}
   @media (max-width:600px){ .hero h1{font-size:2.1rem;} }
 </style>
@@ -143,8 +196,8 @@
 <div id="authScreen">
   <div class="hero">
     <h1>Study<span>Forge</span></h1>
-    <p>Paste messy notes. Get a clean study guide and flashcards in seconds.</p>
-    <span class="badge">Powered by AI · 3 free generations</span>
+    <p>Paste notes, upload a document, or snap a photo. Get a clean study guide and flashcards in seconds.</p>
+    <span class="badge">Powered by AI · Free to try</span>
   </div>
   <div class="auth-card">
     <div id="loginForm">
@@ -167,13 +220,26 @@
 <div id="appScreen" class="hidden">
   <div class="topbar">
     <span id="userEmail"></span>
-    <button id="logoutBtn" class="btn-ghost">Log out</button>
+    <button id="logoutBtn" class="btn-ghost btn-small">Log out</button>
   </div>
 
   <div class="wrap">
     <div class="input-card">
-      <textarea id="notesInput" placeholder="Paste your lecture notes here..."></textarea>
-      <br>
+      <textarea id="notesInput" placeholder="Paste your lecture notes here, or upload a document/image below..."></textarea>
+
+      <div class="upload-row">
+        <label class="upload-btn" id="docUploadBtn">
+          <span id="docLabel">📄 Upload document (PDF / Word / TXT)</span>
+          <span class="fname" id="docFname"></span>
+          <input type="file" id="docInput" accept=".pdf,.docx,.txt">
+        </label>
+        <label class="upload-btn" id="imgUploadBtn">
+          <span id="imgLabel">🖼️ Upload image of notes</span>
+          <span class="fname" id="imgFname"></span>
+          <input type="file" id="imgInput" accept="image/*">
+        </label>
+      </div>
+
       <select id="detailLevel">
         <option value="quick">Quick summary</option>
         <option value="standard" selected>Standard</option>
@@ -199,10 +265,17 @@ const SUPABASE_KEY = "sb_publishable_rz1How5fizOOzI11w_QJ3Q_rSGkhE9d";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const FREE_LIMIT = 5;
+const FREE_DOC_LIMIT = 1;
+const FREE_IMG_LIMIT = 1;
 const UPGRADE_LINK = "PASTE_YOUR_LEMON_SQUEEZY_LINK_HERE";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
 let currentUser = null;
 let currentProfile = null;
+let docFile = null;
+let imgFile = null;
+let lastGeneratedData = null;
 
 const authScreen = document.getElementById('authScreen');
 const appScreen = document.getElementById('appScreen');
@@ -225,7 +298,7 @@ document.getElementById('signupBtn').onclick = async () => {
   errBox.textContent = "";
   if (!email || !password) { errBox.textContent = "Enter an email and password."; return; }
 
-  const { data, error } = await sb.auth.signUp({ email, password });
+  const { error } = await sb.auth.signUp({ email, password });
   if (error) { errBox.textContent = error.message; return; }
   errBox.style.color = "var(--accent2)";
   errBox.textContent = "Account created. Check your email to confirm, then log in.";
@@ -238,7 +311,7 @@ document.getElementById('loginBtn').onclick = async () => {
   errBox.textContent = "";
   if (!email || !password) { errBox.textContent = "Enter an email and password."; return; }
 
-  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  const { error } = await sb.auth.signInWithPassword({ email, password });
   if (error) { errBox.textContent = error.message; return; }
   await loadUser();
 };
@@ -282,17 +355,67 @@ const notesInput = document.getElementById('notesInput');
 const detailLevel = document.getElementById('detailLevel');
 const output = document.getElementById('output');
 const status = document.getElementById('status');
+const docInput = document.getElementById('docInput');
+const imgInput = document.getElementById('imgInput');
+const docUploadBtn = document.getElementById('docUploadBtn');
+const imgUploadBtn = document.getElementById('imgUploadBtn');
+const docFname = document.getElementById('docFname');
+const imgFname = document.getElementById('imgFname');
+
+docInput.addEventListener('change', async () => {
+  const file = docInput.files[0];
+  if (!file) return;
+  imgFile = null; imgFname.textContent = ""; imgUploadBtn.classList.remove('active');
+
+  docFname.textContent = "Reading " + file.name + "...";
+  try {
+    let text = "";
+    if (file.name.endsWith('.pdf')) {
+      const buf = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        text += content.items.map(it => it.str).join(' ') + '\n';
+      }
+    } else if (file.name.endsWith('.docx')) {
+      const buf = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({ arrayBuffer: buf });
+      text = result.value;
+    } else {
+      text = await file.text();
+    }
+    docFile = { name: file.name, text: text.slice(0, 20000) };
+    docFname.textContent = "✓ " + file.name;
+    docUploadBtn.classList.add('active');
+  } catch (err) {
+    console.error(err);
+    docFname.textContent = "Couldn't read this file. Try another.";
+    docFile = null;
+  }
+});
+
+imgInput.addEventListener('change', () => {
+  const file = imgInput.files[0];
+  if (!file) return;
+  docFile = null; docFname.textContent = ""; docUploadBtn.classList.remove('active');
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    imgFile = { name: file.name, base64: reader.result };
+    imgFname.textContent = "✓ " + file.name;
+    imgUploadBtn.classList.add('active');
+  };
+  reader.readAsDataURL(file);
+});
 
 function renderGenerateState() {
   if (!currentProfile) return;
-  if (!currentProfile.is_subscribed && currentProfile.generations_used >= FREE_LIMIT) {
+  const textLimitHit = !currentProfile.is_subscribed && currentProfile.generations_used >= FREE_LIMIT;
+  if (textLimitHit) {
     genBtn.disabled = true;
     status.textContent = "Free limit reached";
-    output.innerHTML = `<div class="upgrade-card">
-      <h3>You've used your 3 free generations</h3>
-      <p>Upgrade to StudyForge Unlimited for unlimited study guides and flashcards.</p>
-      <a href="${UPGRADE_LINK}"><button>Upgrade now</button></a>
-    </div>`;
+    showUpgradeCard("You're out of free generations");
   } else {
     genBtn.disabled = false;
     const remaining = currentProfile.is_subscribed ? "Unlimited" : `${FREE_LIMIT - currentProfile.generations_used} free left`;
@@ -300,12 +423,39 @@ function renderGenerateState() {
   }
 }
 
+function showUpgradeCard(heading) {
+  output.innerHTML = `<div class="upgrade-card">
+    <span class="tag">Unlock unlimited</span>
+    <h3>${heading}</h3>
+    <div class="price">$4.99<span>/month</span></div>
+    <ul>
+      <li>Unlimited study guides and flashcards</li>
+      <li>Unlimited document and image uploads</li>
+      <li>Download your study guides as PDF</li>
+      <li>Cancel anytime</li>
+    </ul>
+    <a href="${UPGRADE_LINK}"><button>Upgrade now</button></a>
+  </div>`;
+}
+
 genBtn.addEventListener('click', async () => {
-  const notes = notesInput.value.trim();
-  if (!notes) { status.textContent = "Paste some notes first."; return; }
-  if (!currentProfile.is_subscribed && currentProfile.generations_used >= FREE_LIMIT) {
-    renderGenerateState();
+  const pastedNotes = notesInput.value.trim();
+
+  if (!pastedNotes && !docFile && !imgFile) {
+    status.textContent = "Paste notes, or upload a document/image first.";
     return;
+  }
+
+  if (!currentProfile.is_subscribed) {
+    if (docFile && currentProfile.documents_used >= FREE_DOC_LIMIT) {
+      showUpgradeCard("You've used your free document upload"); return;
+    }
+    if (imgFile && currentProfile.images_used >= FREE_IMG_LIMIT) {
+      showUpgradeCard("You've used your free image upload"); return;
+    }
+    if (!docFile && !imgFile && currentProfile.generations_used >= FREE_LIMIT) {
+      showUpgradeCard("You're out of free generations"); return;
+    }
   }
 
   genBtn.disabled = true;
@@ -313,20 +463,30 @@ genBtn.addEventListener('click', async () => {
   output.innerHTML = "";
 
   try {
+    const payload = { detail: detailLevel.value };
+    if (imgFile) payload.image = imgFile.base64;
+    else if (docFile) payload.notes = docFile.text;
+    else payload.notes = pastedNotes;
+
     const response = await fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ notes, detail: detailLevel.value })
+      body: JSON.stringify(payload)
     });
     const data = await response.json();
     const raw = data.content.map(b => b.text || "").join("");
     const parsed = JSON.parse(raw.replace(/```json|```/g,"").trim());
+    lastGeneratedData = parsed;
     renderOutput(parsed);
 
     if (!currentProfile.is_subscribed) {
-      const newCount = currentProfile.generations_used + 1;
-      await sb.from('profiles').update({ generations_used: newCount }).eq('id', currentUser.id);
-      currentProfile.generations_used = newCount;
+      const updates = {};
+      if (imgFile) updates.images_used = currentProfile.images_used + 1;
+      else if (docFile) updates.documents_used = currentProfile.documents_used + 1;
+      else updates.generations_used = currentProfile.generations_used + 1;
+
+      await sb.from('profiles').update(updates).eq('id', currentUser.id);
+      Object.assign(currentProfile, updates);
     }
     status.textContent = "";
     renderGenerateState();
@@ -335,13 +495,17 @@ genBtn.addEventListener('click', async () => {
     output.innerHTML = '<div class="empty">Your study guide and flashcards will appear here once you generate them.</div>';
     console.error(err);
   } finally {
-    genBtn.disabled = currentProfile.is_subscribed ? false : currentProfile.generations_used >= FREE_LIMIT;
+    genBtn.disabled = false;
+    renderGenerateState();
   }
 });
 
 function renderOutput(data) {
   let html = `<div class="section">
-    <div class="section-title">Study guide</div>`;
+    <div class="section-title">
+      <span class="section-title-left">Study guide</span>
+      <button class="btn-ghost btn-small" id="downloadBtn">Download PDF</button>
+    </div>`;
   data.guide.forEach(sec => {
     html += `<div class="guide-card"><h3>${sec.heading}</h3><ul>`;
     sec.points.forEach(p => html += `<li>${p}</li>`);
@@ -349,7 +513,7 @@ function renderOutput(data) {
   });
   html += `</div>
   <div class="section">
-    <div class="section-title">Flashcards</div>
+    <div class="section-title"><span class="section-title-left">Flashcards</span></div>
     <div class="cards-grid">`;
   data.flashcards.forEach((c) => {
     html += `<div class="flip-card" onclick="this.classList.toggle('flipped')">
@@ -361,6 +525,51 @@ function renderOutput(data) {
   });
   html += `</div></div>`;
   output.innerHTML = html;
+
+  document.getElementById('downloadBtn').onclick = downloadPDF;
+}
+
+function downloadPDF() {
+  if (!currentProfile.is_subscribed) {
+    showUpgradeCard("Downloads are a paid feature");
+    return;
+  }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  let y = 20;
+  doc.setFontSize(18);
+  doc.text("StudyForge — Study Guide", 14, y);
+  y += 12;
+  doc.setFontSize(12);
+  lastGeneratedData.guide.forEach(sec => {
+    if (y > 270) { doc.addPage(); y = 20; }
+    doc.setFont(undefined, 'bold');
+    doc.text(sec.heading, 14, y); y += 7;
+    doc.setFont(undefined, 'normal');
+    sec.points.forEach(p => {
+      const lines = doc.splitTextToSize("• " + p, 180);
+      lines.forEach(line => {
+        if (y > 270) { doc.addPage(); y = 20; }
+        doc.text(line, 16, y); y += 6;
+      });
+    });
+    y += 4;
+  });
+  doc.addPage(); y = 20;
+  doc.setFontSize(16);
+  doc.text("Flashcards", 14, y); y += 10;
+  doc.setFontSize(11);
+  lastGeneratedData.flashcards.forEach((c, i) => {
+    if (y > 265) { doc.addPage(); y = 20; }
+    doc.setFont(undefined, 'bold');
+    const qLines = doc.splitTextToSize((i+1) + ". " + c.q, 180);
+    qLines.forEach(line => { doc.text(line, 14, y); y += 6; });
+    doc.setFont(undefined, 'normal');
+    const aLines = doc.splitTextToSize("A: " + c.a, 176);
+    aLines.forEach(line => { doc.text(line, 18, y); y += 6; });
+    y += 4;
+  });
+  doc.save("studyforge-guide.pdf");
 }
 </script>
 </body>
