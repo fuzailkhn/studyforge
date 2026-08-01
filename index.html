@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyForge</title>
+<style>
+  :root{
+    --bg:#14161a; --panel:#1c1f26; --border:#2a2e37;
+    --text:#e8e6e1; --muted:#8b8f99; --accent:#4f9dff;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:'Segoe UI',system-ui,sans-serif; padding:2rem;
+  }
+  .wrap{max-width:800px; margin:0 auto;}
+  h1{font-family:Georgia,serif; font-size:2rem; margin:0 0 .25rem;}
+  p.sub{color:var(--muted); margin-top:0;}
+  textarea{
+    width:100%; min-height:180px; background:var(--panel);
+    border:1px solid var(--border); border-radius:8px;
+    color:var(--text); padding:1rem; font-size:.95rem; resize:vertical;
+  }
+  button{
+    margin-top:1rem; background:var(--accent); color:#fff;
+    border:none; padding:.75rem 1.5rem; border-radius:6px;
+    font-size:1rem; cursor:pointer; font-weight:600;
+  }
+  button:disabled{opacity:.5; cursor:not-allowed;}
+  .section{margin-top:2rem;}
+  .section h2{border-bottom:1px solid var(--border); padding-bottom:.5rem;}
+  .card{
+    background:var(--panel); border:1px solid var(--border);
+    border-radius:8px; padding:1rem; margin-bottom:1rem;
+    cursor:pointer; min-height:60px;
+  }
+  .card .q{font-weight:600;}
+  .card .a{display:none; margin-top:.5rem; color:var(--accent);}
+  .card.flipped .a{display:block;}
+  .card.flipped .q{color:var(--muted);}
+  #status{color:var(--muted); font-size:.9rem; margin-top:.5rem;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>StudyForge</h1>
+  <p class="sub">Paste your notes. Get a study guide and flashcards.</p>
+
+  <textarea id="notesInput" placeholder="Paste your lecture notes here..."></textarea>
+  <br>
+  <button id="genBtn">Generate</button>
+  <div id="status"></div>
+
+  <div id="output"></div>
+</div>
+
+<script>
+const genBtn = document.getElementById('genBtn');
+const notesInput = document.getElementById('notesInput');
+const output = document.getElementById('output');
+const status = document.getElementById('status');
+
+genBtn.addEventListener('click', async () => {
+  const notes = notesInput.value.trim();
+  if (!notes) { status.textContent = "Paste some notes first."; return; }
+
+  genBtn.disabled = true;
+  status.textContent = "Generating...";
+  output.innerHTML = "";
+
+  try {
+    const response = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notes })
+    });
+    const data = await response.json();
+    const raw = data.content.map(b => b.text || "").join("");
+    const parsed = JSON.parse(raw.replace(/```json|```/g,"").trim());
+    renderOutput(parsed);
+    status.textContent = "";
+  } catch (err) {
+    status.textContent = "Something went wrong. Try again.";
+    console.error(err);
+  } finally {
+    genBtn.disabled = false;
+  }
+});
+
+function renderOutput(data) {
+  let html = `<div class="section"><h2>Study guide</h2>`;
+  data.guide.forEach(sec => {
+    html += `<h3>${sec.heading}</h3><ul>`;
+    sec.points.forEach(p => html += `<li>${p}</li>`);
+    html += `</ul>`;
+  });
+  html += `</div><div class="section"><h2>Flashcards</h2>`;
+  data.flashcards.forEach((c, i) => {
+    html += `<div class="card" onclick="this.classList.toggle('flipped')">
+      <div class="q">Q: ${c.q}</div>
+      <div class="a">A: ${c.a}</div>
+    </div>`;
+  });
+  html += `</div>`;
+  output.innerHTML = html;
+}
+</script>
+</body>
+</html>
