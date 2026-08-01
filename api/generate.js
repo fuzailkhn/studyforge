@@ -49,6 +49,12 @@ Notes:
   });
 
   const data = await response.json();
+
+  if (!response.ok || !data.choices) {
+    console.error("Groq error:", JSON.stringify(data));
+    return res.status(200).json({ content: [{ text: "" }], debug: data });
+  }
+
   const text = data.choices?.[0]?.message?.content || "";
-  res.status(200).json({ content: [{ text }] });
+  res.status(200).json({ content: [{ text }], debug: null });
 }
