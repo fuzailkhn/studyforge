@@ -12,6 +12,13 @@ export default async function handler(req, res) {
     }
     promptText = `You are a study assistant answering questions about the provided source material. ${historyText}Now answer this question clearly and directly, using only the source material as your basis: "${question}"
 Reply in plain conversational text, no JSON, no markdown formatting, just a clear direct answer.`;
+  } else if (hasImages) {
+    promptText = `You are a study assistant. Look at these image(s) and do two things:
+1. Transcribe all the readable text from the image(s) as accurately as possible into a field called "extractedText".
+2. Create a thorough study guide and flashcards from that content.
+Return ONLY valid JSON (no markdown, no backticks) in this exact shape:
+{"extractedText":"...", "guide":[{"heading":"...", "points":["...","..."]}], "flashcards":[{"q":"...","a":"..."}]}
+Make the guide 5-7 sections with 3-5 points each. Make 8-12 flashcards.`;
   } else {
     promptText = `You are a study assistant. Create a thorough study guide and flashcards from this source material.
 Return ONLY valid JSON (no markdown, no backticks) in this exact shape:
@@ -19,10 +26,11 @@ Return ONLY valid JSON (no markdown, no backticks) in this exact shape:
 Make the guide 5-7 sections with 3-5 points each. Make 8-12 flashcards.`;
   }
 
-  const maxTokens = hasImages ? 1500 : (isChat ? 800 : 5500);
+  const useImages = hasImages && !isChat;
+  const maxTokens = useImages ? 2200 : (isChat ? 800 : 5500);
 
   let body;
-  if (hasImages) {
+  if (useImages) {
     const content = [{ type: "text", text: promptText }];
     images.forEach(img => content.push({ type: "image_url", image_url: { url: img } }));
     body = {
@@ -31,7 +39,7 @@ Make the guide 5-7 sections with 3-5 points each. Make 8-12 flashcards.`;
       temperature: 0.5,
       max_tokens: maxTokens,
       reasoning_effort: "none",
-      ...(isChat ? {} : { response_format: { type: "json_object" } })
+      response_format: { type: "json_object" }
     };
   } else {
     body = {
@@ -60,10 +68,14 @@ Make the guide 5-7 sections with 3-5 points each. Make 8-12 flashcards.`;
 
   if (!response.ok || !data.choices) {
     console.error("Groq error:", JSON.stringify(data));
-    return res.status(200).json({ content: [{ text: "" }], debug: data });
+    let friendly = "Something went wrong. Please try again.";
+    if (data.error?.code === "rate_limit_exceeded") {
+      friendly = "You're asking questions a bit fast — please wait about 30 seconds and try again.";
+    }
+    return res.status(200).json({ content: [{ text: "" }], debug: data, friendlyError: friendly });
   }
 
   let text = data.choices?.[0]?.message?.content || "";
   text = text.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
-  res.status(200).json({ content: [{ text }], debug: null });
+  res.status(200).json({ content: [{ text }], debug: null, friendlyError: null });
 }
