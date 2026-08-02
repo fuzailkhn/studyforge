@@ -70,6 +70,16 @@
   .guide-card h3{margin:0 0 .6rem; color:var(--accent2); font-size:1.05rem;}
   .guide-card ul{margin:0; padding-left:1.2rem; color:#d7d5cd;}
   .guide-card li{margin-bottom:.4rem; line-height:1.5;}
+  .code-block{
+    background:#0a0c10; border:1px solid var(--border); border-radius:10px;
+    padding:1rem; margin-bottom:1.5rem; overflow-x:auto; position:relative;
+  }
+  .code-block pre{ margin:0; font-family:'Consolas','Monaco',monospace; font-size:.85rem;
+    line-height:1.5; color:#c9d1d9; white-space:pre; }
+  .code-lang{ font-size:.7rem; color:var(--accent2); text-transform:uppercase; letter-spacing:.5px;
+    margin-bottom:.5rem; display:block; }
+  .chat-a pre{ background:#0a0c10; border:1px solid var(--border); border-radius:8px; padding:.8rem;
+    overflow-x:auto; font-family:'Consolas','Monaco',monospace; font-size:.83rem; margin:.5rem 0; white-space:pre; }
   .cards-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1rem; }
   .flip-card{background:transparent; height:150px; perspective:1000px; cursor:pointer;}
   .flip-inner{ position:relative; width:100%; height:100%; transition:transform .5s; transform-style:preserve-3d; }
@@ -146,7 +156,7 @@
 
   <div class="wrap">
     <div class="input-card">
-      <textarea id="notesInput" placeholder="Paste notes here, or upload a document/image below. Once uploaded, type a question here instead to ask about it — leave blank for a full study guide."></textarea>
+      <textarea id="notesInput" placeholder="Paste notes here, ask for code in any language, or upload a document/image below. Once uploaded, type a question here instead to ask about it — leave blank for a full study guide."></textarea>
 
       <div class="upload-row">
         <div class="upload-btn" id="docUploadBtn">
@@ -274,7 +284,7 @@ const imgFname = document.getElementById('imgFname');
 const docClear = document.getElementById('docClear');
 const imgClear = document.getElementById('imgClear');
 
-const DEFAULT_PLACEHOLDER = "Paste notes here, or upload a document/image below. Once uploaded, type a question here instead to ask about it — leave blank for a full study guide.";
+const DEFAULT_PLACEHOLDER = "Paste notes here, ask for code in any language, or upload a document/image below. Once uploaded, type a question here instead to ask about it — leave blank for a full study guide.";
 
 function resetConversation() {
   chatHistory = []; hasGeneratedOnce = false;
@@ -533,19 +543,49 @@ genBtn.addEventListener('click', async () => {
   }
 });
 
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function formatChatAnswer(text) {
+  const parts = text.split(/```(\w*)\n?([\s\S]*?)```/g);
+  let html = "";
+  for (let i = 0; i < parts.length; i += 3) {
+    if (parts[i]) html += `<p>${escapeHtml(parts[i]).replace(/\n/g, '<br>')}</p>`;
+    if (parts[i+2] !== undefined) {
+      html += `<pre>${escapeHtml(parts[i+2])}</pre>`;
+    }
+  }
+  return html || escapeHtml(text);
+}
+
 function renderChat() {
   let html = `<div class="section"><div class="section-title"><span class="section-title-left">Conversation</span></div><div class="chat-log">`;
   chatHistory.forEach(turn => {
-    html += `<div class="chat-q">${turn.q}</div><div class="chat-a">${turn.a}</div>`;
+    html += `<div class="chat-q">${turn.q}</div><div class="chat-a">${formatChatAnswer(turn.a)}</div>`;
   });
   html += `</div></div>`;
   output.innerHTML = html;
 }
 
 function renderOutput(data) {
-  let html = `<div class="section">
+  let html = "";
+
+  if (data.code && data.code.content) {
+    html += `<div class="section">
+      <div class="section-title"><span class="section-title-left">Code</span></div>
+      <div class="code-block">
+        <span class="code-lang">${data.code.language || "code"}</span>
+        <pre>${escapeHtml(data.code.content)}</pre>
+      </div>
+    </div>`;
+  }
+
+  html += `<div class="section">
     <div class="section-title">
-      <span class="section-title-left">Study guide</span>
+      <span class="section-title-left">${data.code ? "Explanation" : "Study guide"}</span>
       <button class="btn-ghost btn-small" id="downloadBtn">Download PDF</button>
     </div>`;
   data.guide.forEach(sec => {
