@@ -1,7 +1,7 @@
 export default async function handler(req, res) {
   const { notes, instruction, images } = req.body;
 
-  const defaultInstruction = "Make the guide thorough and detailed: 5-8 sections, each with 4-6 detailed points explaining concepts fully, including examples where relevant. Make 10-15 flashcards covering nuances, not just definitions.";
+  const defaultInstruction = "Make the guide thorough: 5-7 sections, each with 3-5 clear points. Make 8-12 flashcards.";
   const finalInstruction = instruction && instruction.length > 0
     ? `Follow this instruction from the user closely, including for length and depth: "${instruction}"`
     : defaultInstruction;
@@ -11,7 +11,7 @@ export default async function handler(req, res) {
 ${finalInstruction}`;
 
   const hasImages = images && images.length > 0;
-  const maxTokens = hasImages ? 2000 : 4500;
+  const maxTokens = hasImages ? 2000 : 5500;
 
   let body;
   if (hasImages) {
@@ -26,7 +26,8 @@ ${finalInstruction}`;
       messages: [{ role: "user", content }],
       temperature: 0.5,
       max_tokens: maxTokens,
-      reasoning_effort: "none"
+      reasoning_effort: "none",
+      response_format: { type: "json_object" }
     };
   } else {
     body = {
@@ -39,7 +40,8 @@ Notes:
       }],
       temperature: 0.5,
       max_tokens: maxTokens,
-      reasoning_effort: "low"
+      reasoning_effort: "low",
+      response_format: { type: "json_object" }
     };
   }
 
@@ -61,5 +63,5 @@ Notes:
 
   let text = data.choices?.[0]?.message?.content || "";
   text = text.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
-  res.status(200).json({ content: [{ text }], debug: null });
+  res.status(200).json({ content: [{ text }], debug: null, finishReason: data.choices[0].finish_reason });
 }
