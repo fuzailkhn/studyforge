@@ -39,7 +39,7 @@
     border-radius:14px; padding:1.5rem; max-width:420px; margin:2rem auto;
   }
   .input-card{max-width:none; margin:0;}
-  input[type=email], input[type=password]{
+  input[type=email], input[type=password], input[type=text]{
     width:100%; background:var(--panel2); border:1px solid var(--border);
     border-radius:8px; color:var(--text); padding:.7rem .9rem;
     margin-top:.6rem; font-size:.95rem; font-family:inherit;
@@ -52,11 +52,6 @@
     resize:vertical; font-family:inherit;
   }
   textarea:focus{outline:none; border-color:var(--accent);}
-  select{
-    margin-top:.8rem; background:var(--panel2); color:var(--text);
-    border:1px solid var(--border); border-radius:8px;
-    padding:.55rem .7rem; font-size:.9rem; font-family:inherit;
-  }
   .row{display:flex; justify-content:space-between; align-items:center; margin-top:1rem; flex-wrap:wrap; gap:.6rem;}
   button{
     background:var(--accent); color:#0f1115; border:none;
@@ -94,7 +89,6 @@
   .upload-btn.active{border-style:solid; border-color:var(--accent2); color:var(--accent2);}
   .upload-btn input{display:none;}
   .upload-btn .fname{display:block; margin-top:.3rem; font-size:.75rem; color:var(--text); word-break:break-all;}
-  .clear-file{font-size:.7rem; color:var(--muted); text-decoration:underline; cursor:pointer; margin-left:.4rem;}
 
   .empty{
     text-align:center; color:var(--muted); padding:3rem 1rem;
@@ -240,7 +234,8 @@
         </label>
       </div>
 
-      <input type="text" id="customPrompt" placeholder="Any specific instructions? e.g. 'make it short' or 'focus on chapter 3' (optional)" style="width:100%; margin-top:.8rem; background:var(--panel2); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:.6rem .8rem; font-size:.9rem; font-family:inherit;">
+      <input type="text" id="customPrompt" placeholder="Any specific instructions? e.g. 'make it short' or 'focus on chapter 3' (optional)">
+
       <div class="row">
         <span id="status"></span>
         <button id="genBtn">Generate</button>
@@ -349,7 +344,7 @@ checkExistingSession();
 
 const genBtn = document.getElementById('genBtn');
 const notesInput = document.getElementById('notesInput');
-const detailLevel = document.getElementById('detailLevel');
+const customPrompt = document.getElementById('customPrompt');
 const output = document.getElementById('output');
 const status = document.getElementById('status');
 const docInput = document.getElementById('docInput');
@@ -491,7 +486,7 @@ genBtn.addEventListener('click', async () => {
   output.innerHTML = "";
 
   try {
-    const payload = { detail: detailLevel.value };
+    const payload = { instruction: customPrompt.value.trim() };
     if (imgFile) payload.images = [imgFile.base64];
     else if (docImages) payload.images = docImages;
     else if (docFile) payload.notes = docFile.text;
