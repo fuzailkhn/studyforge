@@ -189,11 +189,11 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs
 let currentUser = null;
 let currentProfile = null;
 let docFile = null;
-let docImages = null;
 let imgFile = null;
 let lastGeneratedData = null;
 let chatHistory = [];
 let hasGeneratedOnce = false;
+let isProcessingUpload = false;
 
 const authScreen = document.getElementById('authScreen');
 const appScreen = document.getElementById('appScreen');
@@ -281,8 +281,21 @@ async function renderPdfPagesAsImages(buf, maxPages) {
   return images;
 }
 
+async function extractTextFromImages(images) {
+  const response = await fetch("/api/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ images, extractOnly: true })
+  });
+  const data = await response.json();
+  const raw = data.content.map(b => b.text || "").join("");
+  if (!raw) throw new Error(data.friendlyError || "Couldn't read this file.");
+  const parsed = JSON.parse(raw.replace(/```json|```/g,"").trim());
+  return parsed.extractedText || "";
+}
+
 function resetFileState() {
-  docFile = null; docImages = null; imgFile = null;
+  docFile = null; imgFile = null;
   docFname.textContent = ""; imgFname.textContent = "";
   docUploadBtn.classList.remove('active'); imgUploadBtn.classList.remove('active');
   chatHistory = []; hasGeneratedOnce = false;
@@ -293,6 +306,8 @@ docInput.addEventListener('change', async () => {
   const file = docInput.files[0];
   if (!file) return;
   resetFileState();
+  isProcessingUpload = true;
+  genBtn.disabled = true;
   docFname.textContent = "Reading " + file.name + "...";
   try {
     if (file.name.endsWith('.pdf')) {
@@ -305,10 +320,11 @@ docInput.addEventListener('change', async () => {
         text += content.items.map(it => it.str).join(' ') + '\n';
       }
       if (text.trim().length < 40) {
-        docFname.textContent = "No text layer found — reading as scanned pages...";
+        docFname.textContent = "Reading scanned pages...";
         const images = await renderPdfPagesAsImages(buf.slice(0), 2);
-        docImages = images;
-        docFname.textContent = "✓ " + file.name + " (scanned, " + images.length + " page(s))";
+        const extracted = await extractTextFromImages(images);
+        docFile = { name: file.name, text: extracted };
+        docFname.textContent = "✓ " + file.name + " (ready)";
       } else {
         docFile = { name: file.name, text: text.slice(0, 20000) };
         docFname.textContent = "✓ " + file.name;
@@ -324,26 +340,43 @@ docInput.addEventListener('change', async () => {
       docFname.textContent = "✓ " + file.name;
     }
     docUploadBtn.classList.add('active');
-    notesInput.placeholder = "Document uploaded. Leave blank for a full study guide, or type a question about it here.";
+    notesInput.placeholder = "Document ready. Leave blank for a full study guide, or type a question about it here.";
   } catch (err) {
     console.error(err);
     docFname.textContent = "Couldn't read this file. Try another.";
-    docFile = null; docImages = null;
+    docFile = null;
+  } finally {
+    isProcessingUpload = false;
+    genBtn.disabled = false;
   }
 });
 
-imgInput.addEventListener('change', () => {
+imgInput.addEventListener('change', async () => {
   const file = imgInput.files[0];
   if (!file) return;
   resetFileState();
-  const reader = new FileReader();
-  reader.onload = () => {
-    imgFile = { name: file.name, base64: reader.result };
-    imgFname.textContent = "✓ " + file.name;
+  isProcessingUpload = true;
+  genBtn.disabled = true;
+  imgFname.textContent = "Reading " + file.name + "...";
+  try {
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+    const extracted = await extractTextFromImages([base64]);
+    docFile = { name: file.name, text: extracted };
+    imgFname.textContent = "✓ " + file.name + " (ready)";
     imgUploadBtn.classList.add('active');
-    notesInput.placeholder = "Image uploaded. Leave blank for a full study guide, or type a question about it here.";
-  };
-  reader.readAsDataURL(file);
+    notesInput.placeholder = "Image ready. Leave blank for a full study guide, or type a question about it here.";
+  } catch (err) {
+    console.error(err);
+    imgFname.textContent = "Couldn't read this image. Try another.";
+  } finally {
+    isProcessingUpload = false;
+    genBtn.disabled = false;
+  }
 });
 
 function renderGenerateState() {
@@ -378,7 +411,7 @@ function showUpgradeCard(heading) {
 
 genBtn.addEventListener('click', async () => {
   const typedText = notesInput.value.trim();
-  const isFileUploaded = !!docFile || !!docImages || !!imgFile;
+  const isFileUploaded = !!docFile || !!imgFile;
   const isQuestion = isFileUploaded && hasGeneratedOnce === true && typedText.length > 0;
   const isFirstAskOnUpload = isFileUploaded && !hasGeneratedOnce && typedText.length > 0;
 
@@ -388,14 +421,8 @@ genBtn.addEventListener('click', async () => {
   }
 
   if (!currentProfile.is_subscribed) {
-    if (isFileUploaded && docFile && currentProfile.documents_used >= FREE_DOC_LIMIT && !hasGeneratedOnce) {
+    if (isFileUploaded && currentProfile.documents_used >= FREE_DOC_LIMIT && !hasGeneratedOnce) {
       showUpgradeCard("You've used your free document upload"); return;
-    }
-    if (isFileUploaded && docImages && currentProfile.documents_used >= FREE_DOC_LIMIT && !hasGeneratedOnce) {
-      showUpgradeCard("You've used your free document upload"); return;
-    }
-    if (isFileUploaded && imgFile && currentProfile.images_used >= FREE_IMG_LIMIT && !hasGeneratedOnce) {
-      showUpgradeCard("You've used your free image upload"); return;
     }
     if ((isQuestion || isFirstAskOnUpload) && chatHistory.length >= 1) {
       showUpgradeCard("Follow-up questions are a paid feature"); return;
@@ -412,10 +439,7 @@ genBtn.addEventListener('click', async () => {
 
   try {
     const payload = { question: question, history: chatHistory };
-    if (imgFile) payload.images = [imgFile.base64];
-    else if (docImages) payload.images = docImages;
-    else if (docFile) payload.notes = docFile.text;
-    else payload.notes = typedText;
+    payload.notes = docFile ? docFile.text : typedText;
 
     const response = await fetch("/api/generate", {
       method: "POST",
@@ -443,21 +467,17 @@ genBtn.addEventListener('click', async () => {
       lastGeneratedData = parsed;
       renderOutput(parsed);
       hasGeneratedOnce = true;
-      if (parsed.extractedText && (docImages || imgFile)) {
-        docFile = { name: "extracted", text: parsed.extractedText };
-        docImages = null;
-        imgFile = null;
-      }
       if (isFileUploaded) notesInput.value = "";
     }
 
     if (!currentProfile.is_subscribed) {
       const updates = {};
-      if (imgFile) updates.images_used = currentProfile.images_used + 1;
-      else if (docFile || docImages) updates.documents_used = currentProfile.documents_used + 1;
-      else updates.generations_used = currentProfile.generations_used + 1;
-      await sb.from('profiles').update(updates).eq('id', currentUser.id);
-      Object.assign(currentProfile, updates);
+      if (isFileUploaded && !hasGeneratedOnce) updates.documents_used = currentProfile.documents_used + 1;
+      else if (!isFileUploaded) updates.generations_used = currentProfile.generations_used + 1;
+      if (Object.keys(updates).length > 0) {
+        await sb.from('profiles').update(updates).eq('id', currentUser.id);
+        Object.assign(currentProfile, updates);
+      }
     }
     status.textContent = "";
     renderGenerateState();
