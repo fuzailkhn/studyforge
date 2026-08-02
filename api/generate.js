@@ -1,11 +1,13 @@
 export default async function handler(req, res) {
-  const { notes, question, images, history } = req.body;
+  const { notes, question, images, history, extractOnly } = req.body;
 
   const hasImages = images && images.length > 0;
   const isChat = question && question.length > 0;
 
   let promptText;
-  if (isChat) {
+  if (extractOnly) {
+    promptText = `Transcribe all readable text from these image(s) as accurately as possible. Return ONLY valid JSON (no markdown, no backticks) in this exact shape: {"extractedText":"..."}`;
+  } else if (isChat) {
     let historyText = "";
     if (history && history.length > 0) {
       historyText = "Previous conversation:\n" + history.map(h => `Q: ${h.q}\nA: ${h.a}`).join("\n") + "\n\n";
@@ -27,7 +29,7 @@ Make the guide 5-7 sections with 3-5 points each. Make 8-12 flashcards.`;
   }
 
   const useImages = hasImages && !isChat;
-  const maxTokens = useImages ? 2200 : (isChat ? 800 : 5500);
+  const maxTokens = extractOnly ? 1500 : (useImages ? 2200 : (isChat ? 800 : 5500));
 
   let body;
   if (useImages) {
@@ -36,7 +38,7 @@ Make the guide 5-7 sections with 3-5 points each. Make 8-12 flashcards.`;
     body = {
       model: "qwen/qwen3.6-27b",
       messages: [{ role: "user", content }],
-      temperature: 0.5,
+      temperature: 0.3,
       max_tokens: maxTokens,
       reasoning_effort: "none",
       response_format: { type: "json_object" }
