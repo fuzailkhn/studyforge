@@ -499,7 +499,12 @@ genBtn.addEventListener('click', async () => {
     });
     const data = await response.json();
     const raw = data.content.map(b => b.text || "").join("");
-    const parsed = JSON.parse(raw.replace(/```json|```/g,"").trim());
+   let parsed;
+try {
+  parsed = JSON.parse(raw.replace(/```json|```/g,"").trim());
+} catch (e) {
+  throw new Error("The response got cut off — try shortening your notes or instructions, or try again.");
+}
     lastGeneratedData = parsed;
     renderOutput(parsed);
 
