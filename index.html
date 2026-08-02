@@ -51,12 +51,12 @@
   .topbar button{padding:.5rem 1rem; font-size:.85rem;}
   .upload-row{ display:flex; gap:.8rem; margin-top:.9rem; flex-wrap:wrap; }
   .upload-btn{ flex:1; min-width:160px; background:var(--panel2); border:1px dashed var(--border); color:var(--muted);
-    border-radius:10px; padding:.9rem; text-align:center; cursor:pointer; font-size:.85rem;
+    border-radius:10px; padding:.9rem; text-align:center; font-size:.85rem;
     transition:border-color .15s, color .15s; }
   .upload-btn:hover{border-color:var(--accent); color:var(--text);}
   .upload-btn.active{border-style:solid; border-color:var(--accent2); color:var(--accent2);}
-  .upload-btn input{display:none;}
   .upload-btn .fname{display:block; margin-top:.3rem; font-size:.75rem; color:var(--text); word-break:break-all;}
+  .clear-file{ font-size:.7rem; color:var(--muted); text-decoration:underline; cursor:pointer; margin-top:.4rem; }
   .empty{ text-align:center; color:var(--muted); padding:3rem 1rem; border:1px dashed var(--border);
     border-radius:14px; margin-top:2rem; font-size:.95rem; }
   .section{margin-top:2.5rem; animation:fadeIn .4s ease;}
@@ -148,16 +148,22 @@
       <textarea id="notesInput" placeholder="Paste notes here, or upload a document/image below. Once uploaded, type a question here instead to ask about it — leave blank for a full study guide."></textarea>
 
       <div class="upload-row">
-        <label class="upload-btn" id="docUploadBtn">
-          <span id="docLabel">📄 Upload document (PDF / Word / TXT)</span>
+        <div class="upload-btn" id="docUploadBtn">
+          <label style="cursor:pointer; display:block;">
+            <span id="docLabel">📄 Upload document (PDF / Word / TXT)</span>
+            <input type="file" id="docInput" accept=".pdf,.docx,.txt" style="display:none;">
+          </label>
           <span class="fname" id="docFname"></span>
-          <input type="file" id="docInput" accept=".pdf,.docx,.txt">
-        </label>
-        <label class="upload-btn" id="imgUploadBtn">
-          <span id="imgLabel">🖼️ Upload image of notes</span>
+          <span class="clear-file hidden" id="docClear">✕ remove</span>
+        </div>
+        <div class="upload-btn" id="imgUploadBtn">
+          <label style="cursor:pointer; display:block;">
+            <span id="imgLabel">🖼️ Upload image of notes</span>
+            <input type="file" id="imgInput" accept="image/*" style="display:none;">
+          </label>
           <span class="fname" id="imgFname"></span>
-          <input type="file" id="imgInput" accept="image/*">
-        </label>
+          <span class="clear-file hidden" id="imgClear">✕ remove</span>
+        </div>
       </div>
 
       <div class="row">
@@ -181,7 +187,6 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const FREE_LIMIT = 5;
 const FREE_DOC_LIMIT = 1;
-const FREE_IMG_LIMIT = 1;
 const UPGRADE_LINK = "PASTE_YOUR_LEMON_SQUEEZY_LINK_HERE";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
@@ -193,7 +198,6 @@ let imgFile = null;
 let lastGeneratedData = null;
 let chatHistory = [];
 let hasGeneratedOnce = false;
-let isProcessingUpload = false;
 
 const authScreen = document.getElementById('authScreen');
 const appScreen = document.getElementById('appScreen');
@@ -264,6 +268,42 @@ const docUploadBtn = document.getElementById('docUploadBtn');
 const imgUploadBtn = document.getElementById('imgUploadBtn');
 const docFname = document.getElementById('docFname');
 const imgFname = document.getElementById('imgFname');
+const docClear = document.getElementById('docClear');
+const imgClear = document.getElementById('imgClear');
+
+const DEFAULT_PLACEHOLDER = "Paste notes here, or upload a document/image below. Once uploaded, type a question here instead to ask about it — leave blank for a full study guide.";
+
+function resetConversation() {
+  chatHistory = []; hasGeneratedOnce = false;
+  notesInput.value = "";
+  output.innerHTML = '<div class="empty">Your study guide and flashcards will appear here once you generate them.</div>';
+}
+
+function clearDoc(e) {
+  if (e) e.stopPropagation();
+  docFile = null;
+  docFname.textContent = "";
+  docClear.classList.add('hidden');
+  docUploadBtn.classList.remove('active');
+  docInput.value = "";
+  notesInput.placeholder = DEFAULT_PLACEHOLDER;
+  resetConversation();
+}
+
+function clearImg(e) {
+  if (e) e.stopPropagation();
+  imgFile = null;
+  docFile = null;
+  imgFname.textContent = "";
+  imgClear.classList.add('hidden');
+  imgUploadBtn.classList.remove('active');
+  imgInput.value = "";
+  notesInput.placeholder = DEFAULT_PLACEHOLDER;
+  resetConversation();
+}
+
+docClear.addEventListener('click', clearDoc);
+imgClear.addEventListener('click', clearImg);
 
 async function renderPdfPagesAsImages(buf, maxPages) {
   const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
@@ -294,19 +334,15 @@ async function extractTextFromImages(images) {
   return parsed.extractedText || "";
 }
 
-function resetFileState() {
-  docFile = null; imgFile = null;
-  docFname.textContent = ""; imgFname.textContent = "";
-  docUploadBtn.classList.remove('active'); imgUploadBtn.classList.remove('active');
-  chatHistory = []; hasGeneratedOnce = false;
-  notesInput.value = "";
-}
-
 docInput.addEventListener('change', async () => {
   const file = docInput.files[0];
   if (!file) return;
-  resetFileState();
-  isProcessingUpload = true;
+  clearImg();
+  docFile = null;
+  docClear.classList.add('hidden');
+  docUploadBtn.classList.remove('active');
+  resetConversation();
+
   genBtn.disabled = true;
   docFname.textContent = "Reading " + file.name + "...";
   try {
@@ -340,13 +376,13 @@ docInput.addEventListener('change', async () => {
       docFname.textContent = "✓ " + file.name;
     }
     docUploadBtn.classList.add('active');
+    docClear.classList.remove('hidden');
     notesInput.placeholder = "Document ready. Leave blank for a full study guide, or type a question about it here.";
   } catch (err) {
     console.error(err);
     docFname.textContent = "Couldn't read this file. Try another.";
     docFile = null;
   } finally {
-    isProcessingUpload = false;
     genBtn.disabled = false;
   }
 });
@@ -354,8 +390,12 @@ docInput.addEventListener('change', async () => {
 imgInput.addEventListener('change', async () => {
   const file = imgInput.files[0];
   if (!file) return;
-  resetFileState();
-  isProcessingUpload = true;
+  clearDoc();
+  imgFile = null;
+  imgClear.classList.add('hidden');
+  imgUploadBtn.classList.remove('active');
+  resetConversation();
+
   genBtn.disabled = true;
   imgFname.textContent = "Reading " + file.name + "...";
   try {
@@ -369,12 +409,12 @@ imgInput.addEventListener('change', async () => {
     docFile = { name: file.name, text: extracted };
     imgFname.textContent = "✓ " + file.name + " (ready)";
     imgUploadBtn.classList.add('active');
+    imgClear.classList.remove('hidden');
     notesInput.placeholder = "Image ready. Leave blank for a full study guide, or type a question about it here.";
   } catch (err) {
     console.error(err);
     imgFname.textContent = "Couldn't read this image. Try another.";
   } finally {
-    isProcessingUpload = false;
     genBtn.disabled = false;
   }
 });
@@ -411,7 +451,7 @@ function showUpgradeCard(heading) {
 
 genBtn.addEventListener('click', async () => {
   const typedText = notesInput.value.trim();
-  const isFileUploaded = !!docFile || !!imgFile;
+  const isFileUploaded = !!docFile;
   const isQuestion = isFileUploaded && hasGeneratedOnce === true && typedText.length > 0;
   const isFirstAskOnUpload = isFileUploaded && !hasGeneratedOnce && typedText.length > 0;
 
