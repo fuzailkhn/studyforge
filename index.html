@@ -15,173 +15,99 @@
     --accent:#4f9dff; --accent2:#7bd0c9;
   }
   *{box-sizing:border-box;}
-  body{
-    margin:0; background:var(--bg); color:var(--text);
-    font-family:'Segoe UI',system-ui,sans-serif;
-  }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; }
   a{color:var(--accent);}
-  .hero{
-    padding:4rem 1.5rem 3rem; text-align:center;
-    border-bottom:1px solid var(--border);
-    background:radial-gradient(ellipse at top, rgba(79,157,255,0.08), transparent 60%);
-  }
+  .hero{ padding:4rem 1.5rem 3rem; text-align:center; border-bottom:1px solid var(--border);
+    background:radial-gradient(ellipse at top, rgba(79,157,255,0.08), transparent 60%); }
   .hero h1{ font-family:Georgia,serif; font-size:2.8rem; margin:0; letter-spacing:.5px;}
   .hero h1 span{color:var(--accent);}
   .hero p{ color:var(--muted); margin:.9rem auto 0; font-size:1.1rem; max-width:480px; line-height:1.5;}
-  .badge{
-    display:inline-block; margin-top:1.2rem; font-size:.78rem;
-    color:var(--accent2); border:1px solid var(--border);
-    background:var(--panel); padding:.35rem .8rem; border-radius:20px;
-  }
+  .badge{ display:inline-block; margin-top:1.2rem; font-size:.78rem; color:var(--accent2); border:1px solid var(--border);
+    background:var(--panel); padding:.35rem .8rem; border-radius:20px; }
   .wrap{max-width:820px; margin:0 auto; padding:3rem 1.5rem 4rem;}
-  .auth-card, .input-card{
-    background:var(--panel); border:1px solid var(--border);
-    border-radius:14px; padding:1.5rem; max-width:420px; margin:2rem auto;
-  }
+  .auth-card, .input-card{ background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:1.5rem; max-width:420px; margin:2rem auto; }
   .input-card{max-width:none; margin:0;}
   input[type=email], input[type=password], input[type=text]{
-    width:100%; background:var(--panel2); border:1px solid var(--border);
-    border-radius:8px; color:var(--text); padding:.7rem .9rem;
-    margin-top:.6rem; font-size:.95rem; font-family:inherit;
-  }
+    width:100%; background:var(--panel2); border:1px solid var(--border); border-radius:8px; color:var(--text);
+    padding:.7rem .9rem; margin-top:.6rem; font-size:.95rem; font-family:inherit; }
   input:focus{outline:none; border-color:var(--accent);}
-  textarea{
-    width:100%; min-height:170px; background:var(--panel2);
-    border:1px solid var(--border); border-radius:10px;
-    color:var(--text); padding:1rem; font-size:.95rem;
-    resize:vertical; font-family:inherit;
-  }
+  textarea{ width:100%; min-height:170px; background:var(--panel2); border:1px solid var(--border); border-radius:10px;
+    color:var(--text); padding:1rem; font-size:.95rem; resize:vertical; font-family:inherit; }
   textarea:focus{outline:none; border-color:var(--accent);}
   .row{display:flex; justify-content:space-between; align-items:center; margin-top:1rem; flex-wrap:wrap; gap:.6rem;}
-  button{
-    background:var(--accent); color:#0f1115; border:none;
-    padding:.8rem 1.8rem; border-radius:8px; font-size:1rem;
-    cursor:pointer; font-weight:700; transition:opacity .15s, transform .1s;
-  }
+  button{ background:var(--accent); color:#0f1115; border:none; padding:.8rem 1.8rem; border-radius:8px; font-size:1rem;
+    cursor:pointer; font-weight:700; transition:opacity .15s, transform .1s; }
   button:hover{opacity:.9;}
   button:active{transform:scale(.98);}
   button:disabled{opacity:.4; cursor:not-allowed;}
   .btn-full{width:100%; margin-top:1rem;}
-  .btn-ghost{
-    background:transparent; border:1px solid var(--border); color:var(--text);
-  }
+  .btn-ghost{ background:transparent; border:1px solid var(--border); color:var(--text); }
   .btn-small{padding:.5rem 1rem; font-size:.85rem;}
-  #status, #authStatus{color:var(--muted); font-size:.9rem;}
+  #status{color:var(--muted); font-size:.9rem;}
   #authError{color:#e07b7b; font-size:.85rem; margin-top:.6rem;}
-
-  .topbar{
-    display:flex; justify-content:space-between; align-items:center;
-    padding:1rem 1.5rem; border-bottom:1px solid var(--border);
-    max-width:820px; margin:0 auto;
-  }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; padding:1rem 1.5rem;
+    border-bottom:1px solid var(--border); max-width:820px; margin:0 auto; }
   .topbar span{font-size:.85rem; color:var(--muted);}
   .topbar button{padding:.5rem 1rem; font-size:.85rem;}
-
-  .upload-row{
-    display:flex; gap:.8rem; margin-top:.9rem; flex-wrap:wrap;
-  }
-  .upload-btn{
-    flex:1; min-width:160px; background:var(--panel2); border:1px dashed var(--border);
-    color:var(--muted); border-radius:10px; padding:.9rem; text-align:center;
-    cursor:pointer; font-size:.85rem; transition:border-color .15s, color .15s;
-  }
+  .upload-row{ display:flex; gap:.8rem; margin-top:.9rem; flex-wrap:wrap; }
+  .upload-btn{ flex:1; min-width:160px; background:var(--panel2); border:1px dashed var(--border); color:var(--muted);
+    border-radius:10px; padding:.9rem; text-align:center; cursor:pointer; font-size:.85rem;
+    transition:border-color .15s, color .15s; }
   .upload-btn:hover{border-color:var(--accent); color:var(--text);}
   .upload-btn.active{border-style:solid; border-color:var(--accent2); color:var(--accent2);}
   .upload-btn input{display:none;}
   .upload-btn .fname{display:block; margin-top:.3rem; font-size:.75rem; color:var(--text); word-break:break-all;}
-
-  .empty{
-    text-align:center; color:var(--muted); padding:3rem 1rem;
-    border:1px dashed var(--border); border-radius:14px; margin-top:2rem;
-    font-size:.95rem;
-  }
+  .empty{ text-align:center; color:var(--muted); padding:3rem 1rem; border:1px dashed var(--border);
+    border-radius:14px; margin-top:2rem; font-size:.95rem; }
   .section{margin-top:2.5rem; animation:fadeIn .4s ease;}
   @keyframes fadeIn{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);}}
-  .section-title{
-    font-family:Georgia,serif; font-size:1.4rem; margin-bottom:1rem;
-    display:flex; align-items:center; gap:.5rem; justify-content:space-between;
-  }
+  .section-title{ font-family:Georgia,serif; font-size:1.4rem; margin-bottom:1rem; display:flex; align-items:center;
+    gap:.5rem; justify-content:space-between; }
   .section-title-left{display:flex; align-items:center; gap:.5rem;}
   .section-title-left::before{content:''; width:6px; height:6px; border-radius:50%; background:var(--accent);}
-  .guide-card{
-    background:var(--panel); border:1px solid var(--border);
-    border-radius:12px; padding:1.2rem 1.5rem; margin-bottom:1rem;
-  }
+  .guide-card{ background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:1.2rem 1.5rem; margin-bottom:1rem; }
   .guide-card h3{margin:0 0 .6rem; color:var(--accent2); font-size:1.05rem;}
   .guide-card ul{margin:0; padding-left:1.2rem; color:#d7d5cd;}
   .guide-card li{margin-bottom:.4rem; line-height:1.5;}
-  .cards-grid{
-    display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-    gap:1rem;
-  }
+  .cards-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1rem; }
   .flip-card{background:transparent; height:150px; perspective:1000px; cursor:pointer;}
-  .flip-inner{
-    position:relative; width:100%; height:100%;
-    transition:transform .5s; transform-style:preserve-3d;
-  }
+  .flip-inner{ position:relative; width:100%; height:100%; transition:transform .5s; transform-style:preserve-3d; }
   .flip-card.flipped .flip-inner{transform:rotateY(180deg);}
-  .flip-face{
-    position:absolute; width:100%; height:100%; backface-visibility:hidden;
-    border-radius:12px; border:1px solid var(--border);
-    padding:1rem; display:flex; align-items:center; justify-content:center;
-    text-align:center; font-size:.95rem; line-height:1.4;
-  }
+  .flip-face{ position:absolute; width:100%; height:100%; backface-visibility:hidden; border-radius:12px;
+    border:1px solid var(--border); padding:1rem; display:flex; align-items:center; justify-content:center;
+    text-align:center; font-size:.95rem; line-height:1.4; }
   .flip-front{background:var(--panel2); color:var(--text);}
   .flip-back{background:var(--accent); color:#0f1115; transform:rotateY(180deg); font-weight:600;}
   .flip-hint{position:absolute; bottom:8px; right:10px; font-size:.65rem; color:var(--muted);}
   .flip-back .flip-hint{color:#0f1115; opacity:.5;}
-  .spinner{
-    width:16px; height:16px; border:2px solid var(--border);
-    border-top-color:var(--accent); border-radius:50%;
-    display:inline-block; animation:spin .7s linear infinite; margin-right:6px;
-    vertical-align:-3px;
-  }
+  .spinner{ width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--accent);
+    border-radius:50%; display:inline-block; animation:spin .7s linear infinite; margin-right:6px; vertical-align:-3px; }
   @keyframes spin{to{transform:rotate(360deg);}}
-  footer{
-    text-align:center; padding:2rem 1.5rem; color:var(--muted);
-    font-size:.85rem; border-top:1px solid var(--border);
-  }
-  .upgrade-card{
-    background:linear-gradient(180deg, var(--panel) 0%, var(--panel2) 100%);
-    border:1px solid var(--border);
-    border-radius:18px; padding:2.5rem 2rem; text-align:center; margin-top:2rem;
-    position:relative; overflow:hidden;
-  }
-  .upgrade-card::before{
-    content:''; position:absolute; top:0; left:0; right:0; height:3px;
-    background:linear-gradient(90deg, var(--accent), var(--accent2));
-  }
-  .upgrade-card .tag{
-    display:inline-block; font-size:.72rem; letter-spacing:.5px;
-    color:var(--accent2); background:rgba(123,208,201,0.1);
-    border:1px solid var(--accent2); padding:.3rem .8rem;
-    border-radius:20px; margin-bottom:1rem; text-transform:uppercase;
-  }
+  footer{ text-align:center; padding:2rem 1.5rem; color:var(--muted); font-size:.85rem; border-top:1px solid var(--border); }
+  .upgrade-card{ background:linear-gradient(180deg, var(--panel) 0%, var(--panel2) 100%); border:1px solid var(--border);
+    border-radius:18px; padding:2.5rem 2rem; text-align:center; margin-top:2rem; position:relative; overflow:hidden; }
+  .upgrade-card::before{ content:''; position:absolute; top:0; left:0; right:0; height:3px;
+    background:linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .upgrade-card .tag{ display:inline-block; font-size:.72rem; letter-spacing:.5px; color:var(--accent2);
+    background:rgba(123,208,201,0.1); border:1px solid var(--accent2); padding:.3rem .8rem; border-radius:20px;
+    margin-bottom:1rem; text-transform:uppercase; }
   .upgrade-card h3{font-family:Georgia,serif; font-size:1.5rem; margin:0 0 .4rem;}
-  .upgrade-card .price{
-    font-family:Georgia,serif; font-size:2.6rem; font-weight:700;
-    color:var(--accent); margin:1rem 0 .2rem;
-  }
+  .upgrade-card .price{ font-family:Georgia,serif; font-size:2.6rem; font-weight:700; color:var(--accent); margin:1rem 0 .2rem; }
   .upgrade-card .price span{font-size:1rem; color:var(--muted); font-weight:400;}
-  .upgrade-card ul{
-    list-style:none; padding:0; margin:1.5rem 0; text-align:left;
-    max-width:280px; margin-left:auto; margin-right:auto;
-  }
-  .upgrade-card li{
-    padding:.5rem 0; color:#d7d5cd; font-size:.9rem;
-    border-bottom:1px solid var(--border); display:flex; align-items:center; gap:.6rem;
-  }
+  .upgrade-card ul{ list-style:none; padding:0; margin:1.5rem 0; text-align:left; max-width:280px; margin-left:auto; margin-right:auto; }
+  .upgrade-card li{ padding:.5rem 0; color:#d7d5cd; font-size:.9rem; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:.6rem; }
   .upgrade-card li:last-child{border-bottom:none;}
   .upgrade-card li::before{content:'✓'; color:var(--accent2); font-weight:700;}
-  .upgrade-card button{
-    font-size:1.05rem; padding:.9rem 2.5rem; margin-top:.5rem;
-    box-shadow:0 4px 20px rgba(79,157,255,0.25);
-    transition:transform .15s ease, box-shadow .15s ease;
-  }
-  .upgrade-card button:hover{
-    transform:translateY(-2px); box-shadow:0 6px 26px rgba(79,157,255,0.4); opacity:1;
-  }
+  .upgrade-card button{ font-size:1.05rem; padding:.9rem 2.5rem; margin-top:.5rem;
+    box-shadow:0 4px 20px rgba(79,157,255,0.25); transition:transform .15s ease, box-shadow .15s ease; }
+  .upgrade-card button:hover{ transform:translateY(-2px); box-shadow:0 6px 26px rgba(79,157,255,0.4); opacity:1; }
   .hidden{display:none;}
+  .chat-log{margin-top:1.5rem; display:flex; flex-direction:column; gap:.8rem;}
+  .chat-q{ align-self:flex-end; background:var(--accent); color:#0f1115; padding:.7rem 1rem; border-radius:12px 12px 2px 12px;
+    max-width:80%; font-size:.92rem; font-weight:600; }
+  .chat-a{ align-self:flex-start; background:var(--panel); border:1px solid var(--border); padding:.9rem 1.1rem;
+    border-radius:12px 12px 12px 2px; max-width:85%; font-size:.92rem; line-height:1.55; color:#d7d5cd; }
   @media (max-width:600px){ .hero h1{font-size:2.1rem;} }
 </style>
 </head>
@@ -190,7 +116,7 @@
 <div id="authScreen">
   <div class="hero">
     <h1>Study<span>Forge</span></h1>
-    <p>Paste notes, upload a document, or snap a photo. Get a clean study guide and flashcards in seconds.</p>
+    <p>Paste notes, upload a document, or snap a photo. Get a study guide, or ask it anything.</p>
     <span class="badge">Powered by AI · Free to try</span>
   </div>
   <div class="auth-card">
@@ -234,7 +160,8 @@
         </label>
       </div>
 
-<input type="text" id="customPrompt" placeholder="Ask a question or give instructions (optional) — e.g. 'What is the applicant's name?'">
+      <input type="text" id="customPrompt" placeholder="Leave blank for a full study guide, or ask a question — e.g. 'What is the applicant's name?'">
+
       <div class="row">
         <span id="status"></span>
         <button id="genBtn">Generate</button>
@@ -267,6 +194,7 @@ let docFile = null;
 let docImages = null;
 let imgFile = null;
 let lastGeneratedData = null;
+let chatHistory = [];
 
 const authScreen = document.getElementById('authScreen');
 const appScreen = document.getElementById('appScreen');
@@ -274,12 +202,10 @@ const loginForm = document.getElementById('loginForm');
 const signupForm = document.getElementById('signupForm');
 
 document.getElementById('showSignup').onclick = () => {
-  loginForm.classList.add('hidden');
-  signupForm.classList.remove('hidden');
+  loginForm.classList.add('hidden'); signupForm.classList.remove('hidden');
 };
 document.getElementById('showLogin').onclick = () => {
-  signupForm.classList.add('hidden');
-  loginForm.classList.remove('hidden');
+  signupForm.classList.add('hidden'); loginForm.classList.remove('hidden');
 };
 
 document.getElementById('signupBtn').onclick = async () => {
@@ -288,7 +214,6 @@ document.getElementById('signupBtn').onclick = async () => {
   const errBox = document.getElementById('signupError');
   errBox.textContent = "";
   if (!email || !password) { errBox.textContent = "Enter an email and password."; return; }
-
   const { error } = await sb.auth.signUp({ email, password });
   if (error) { errBox.textContent = error.message; return; }
   errBox.style.color = "var(--accent2)";
@@ -301,7 +226,6 @@ document.getElementById('loginBtn').onclick = async () => {
   const errBox = document.getElementById('authError');
   errBox.textContent = "";
   if (!email || !password) { errBox.textContent = "Enter an email and password."; return; }
-
   const { error } = await sb.auth.signInWithPassword({ email, password });
   if (error) { errBox.textContent = error.message; return; }
   await loadUser();
@@ -309,29 +233,19 @@ document.getElementById('loginBtn').onclick = async () => {
 
 document.getElementById('logoutBtn').onclick = async () => {
   await sb.auth.signOut();
-  currentUser = null;
-  currentProfile = null;
-  appScreen.classList.add('hidden');
-  authScreen.classList.remove('hidden');
+  currentUser = null; currentProfile = null;
+  appScreen.classList.add('hidden'); authScreen.classList.remove('hidden');
 };
 
 async function loadUser() {
   const { data: { user } } = await sb.auth.getUser();
   if (!user) return;
   currentUser = user;
-
-  const { data: profile, error } = await sb
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
-
+  const { data: profile, error } = await sb.from('profiles').select('*').eq('id', user.id).single();
   if (error) { console.error(error); return; }
   currentProfile = profile;
-
   document.getElementById('userEmail').textContent = user.email;
-  authScreen.classList.add('hidden');
-  appScreen.classList.remove('hidden');
+  authScreen.classList.add('hidden'); appScreen.classList.remove('hidden');
   renderGenerateState();
 }
 
@@ -361,8 +275,7 @@ async function renderPdfPagesAsImages(buf, maxPages) {
     const page = await pdf.getPage(i);
     const viewport = page.getViewport({ scale: 1.0 });
     const canvas = document.createElement('canvas');
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
+    canvas.width = viewport.width; canvas.height = viewport.height;
     const ctx = canvas.getContext('2d');
     await page.render({ canvasContext: ctx, viewport }).promise;
     images.push(canvas.toDataURL('image/jpeg', 0.6));
@@ -375,7 +288,7 @@ docInput.addEventListener('change', async () => {
   if (!file) return;
   imgFile = null; imgFname.textContent = ""; imgUploadBtn.classList.remove('active');
   docFile = null; docImages = null;
-
+  chatHistory = [];
   docFname.textContent = "Reading " + file.name + "...";
   try {
     if (file.name.endsWith('.pdf')) {
@@ -387,7 +300,6 @@ docInput.addEventListener('change', async () => {
         const content = await page.getTextContent();
         text += content.items.map(it => it.str).join(' ') + '\n';
       }
-
       if (text.trim().length < 40) {
         docFname.textContent = "No text layer found — reading as scanned pages...";
         const images = await renderPdfPagesAsImages(buf.slice(0), 2);
@@ -411,8 +323,7 @@ docInput.addEventListener('change', async () => {
   } catch (err) {
     console.error(err);
     docFname.textContent = "Couldn't read this file. Try another.";
-    docFile = null;
-    docImages = null;
+    docFile = null; docImages = null;
   }
 });
 
@@ -420,7 +331,7 @@ imgInput.addEventListener('change', () => {
   const file = imgInput.files[0];
   if (!file) return;
   docFile = null; docImages = null; docFname.textContent = ""; docUploadBtn.classList.remove('active');
-
+  chatHistory = [];
   const reader = new FileReader();
   reader.onload = () => {
     imgFile = { name: file.name, base64: reader.result };
@@ -452,6 +363,7 @@ function showUpgradeCard(heading) {
     <ul>
       <li>Unlimited study guides and flashcards</li>
       <li>Unlimited document and image uploads</li>
+      <li>Ask unlimited follow-up questions</li>
       <li>Download your study guides as PDF</li>
       <li>Cancel anytime</li>
     </ul>
@@ -461,10 +373,12 @@ function showUpgradeCard(heading) {
 
 genBtn.addEventListener('click', async () => {
   const pastedNotes = notesInput.value.trim();
+  const question = customPrompt.value.trim();
   const isDocUpload = !!docFile || !!docImages;
+  const isChatTurn = question.length > 0 && (chatHistory.length > 0 || isDocUpload || !!imgFile || pastedNotes.length > 0);
 
-  if (!pastedNotes && !isDocUpload && !imgFile) {
-    status.textContent = "Paste notes, or upload a document/image first.";
+  if (!pastedNotes && !isDocUpload && !imgFile && !question) {
+    status.textContent = "Paste notes, upload a document/image, or ask a question.";
     return;
   }
 
@@ -475,17 +389,19 @@ genBtn.addEventListener('click', async () => {
     if (imgFile && currentProfile.images_used >= FREE_IMG_LIMIT) {
       showUpgradeCard("You've used your free image upload"); return;
     }
-    if (!isDocUpload && !imgFile && currentProfile.generations_used >= FREE_LIMIT) {
+    if (question && chatHistory.length >= 1) {
+      showUpgradeCard("Follow-up questions are a paid feature"); return;
+    }
+    if (!isDocUpload && !imgFile && !question && currentProfile.generations_used >= FREE_LIMIT) {
       showUpgradeCard("You're out of free generations"); return;
     }
   }
 
   genBtn.disabled = true;
-  status.innerHTML = '<span class="spinner"></span> Generating...';
-  output.innerHTML = "";
+  status.innerHTML = '<span class="spinner"></span> Working...';
 
   try {
-    const payload = { instruction: customPrompt.value.trim() };
+    const payload = { question: question, history: chatHistory };
     if (imgFile) payload.images = [imgFile.base64];
     else if (docImages) payload.images = docImages;
     else if (docFile) payload.notes = docFile.text;
@@ -498,21 +414,27 @@ genBtn.addEventListener('click', async () => {
     });
     const data = await response.json();
     const raw = data.content.map(b => b.text || "").join("");
-   let parsed;
-try {
-  parsed = JSON.parse(raw.replace(/```json|```/g,"").trim());
-} catch (e) {
-  throw new Error("The response got cut off — try shortening your notes or instructions, or try again.");
-}
-    lastGeneratedData = parsed;
-    renderOutput(parsed);
+
+    if (question) {
+      chatHistory.push({ q: question, a: raw });
+      renderChat();
+      customPrompt.value = "";
+    } else {
+      let parsed;
+      try {
+        parsed = JSON.parse(raw.replace(/```json|```/g,"").trim());
+      } catch (e) {
+        throw new Error("The response got cut off — try again.");
+      }
+      lastGeneratedData = parsed;
+      renderOutput(parsed);
+    }
 
     if (!currentProfile.is_subscribed) {
       const updates = {};
       if (imgFile) updates.images_used = currentProfile.images_used + 1;
       else if (isDocUpload) updates.documents_used = currentProfile.documents_used + 1;
       else updates.generations_used = currentProfile.generations_used + 1;
-
       await sb.from('profiles').update(updates).eq('id', currentUser.id);
       Object.assign(currentProfile, updates);
     }
@@ -520,13 +442,21 @@ try {
     renderGenerateState();
   } catch (err) {
     status.textContent = "Something went wrong. Try again.";
-    output.innerHTML = '<div class="empty">Your study guide and flashcards will appear here once you generate them.</div>';
     console.error(err);
   } finally {
     genBtn.disabled = false;
     renderGenerateState();
   }
 });
+
+function renderChat() {
+  let html = `<div class="section"><div class="section-title"><span class="section-title-left">Conversation</span></div><div class="chat-log">`;
+  chatHistory.forEach(turn => {
+    html += `<div class="chat-q">${turn.q}</div><div class="chat-a">${turn.a}</div>`;
+  });
+  html += `</div></div>`;
+  output.innerHTML = html;
+}
 
 function renderOutput(data) {
   let html = `<div class="section">
@@ -553,39 +483,29 @@ function renderOutput(data) {
   });
   html += `</div></div>`;
   output.innerHTML = html;
-
   document.getElementById('downloadBtn').onclick = downloadPDF;
 }
 
 function downloadPDF() {
-  if (!currentProfile.is_subscribed) {
-    showUpgradeCard("Downloads are a paid feature");
-    return;
-  }
+  if (!currentProfile.is_subscribed) { showUpgradeCard("Downloads are a paid feature"); return; }
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   let y = 20;
   doc.setFontSize(18);
-  doc.text("StudyForge — Study Guide", 14, y);
-  y += 12;
+  doc.text("StudyForge — Study Guide", 14, y); y += 12;
   doc.setFontSize(12);
   lastGeneratedData.guide.forEach(sec => {
     if (y > 270) { doc.addPage(); y = 20; }
-    doc.setFont(undefined, 'bold');
-    doc.text(sec.heading, 14, y); y += 7;
+    doc.setFont(undefined, 'bold'); doc.text(sec.heading, 14, y); y += 7;
     doc.setFont(undefined, 'normal');
     sec.points.forEach(p => {
       const lines = doc.splitTextToSize("• " + p, 180);
-      lines.forEach(line => {
-        if (y > 270) { doc.addPage(); y = 20; }
-        doc.text(line, 16, y); y += 6;
-      });
+      lines.forEach(line => { if (y > 270) { doc.addPage(); y = 20; } doc.text(line, 16, y); y += 6; });
     });
     y += 4;
   });
   doc.addPage(); y = 20;
-  doc.setFontSize(16);
-  doc.text("Flashcards", 14, y); y += 10;
+  doc.setFontSize(16); doc.text("Flashcards", 14, y); y += 10;
   doc.setFontSize(11);
   lastGeneratedData.flashcards.forEach((c, i) => {
     if (y > 265) { doc.addPage(); y = 20; }
