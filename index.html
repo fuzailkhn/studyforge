@@ -27,7 +27,7 @@
   .wrap{max-width:820px; margin:0 auto; padding:3rem 1.5rem 4rem;}
   .auth-card, .input-card{ background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:1.5rem; max-width:420px; margin:2rem auto; }
   .input-card{max-width:none; margin:0;}
-  input[type=email], input[type=password], input[type=text]{
+  input[type=email], input[type=password]{
     width:100%; background:var(--panel2); border:1px solid var(--border); border-radius:8px; color:var(--text);
     padding:.7rem .9rem; margin-top:.6rem; font-size:.95rem; font-family:inherit; }
   input:focus{outline:none; border-color:var(--accent);}
@@ -145,7 +145,7 @@
 
   <div class="wrap">
     <div class="input-card">
-      <textarea id="notesInput" placeholder="Paste your lecture notes here, or upload a document/image below..."></textarea>
+      <textarea id="notesInput" placeholder="Paste notes here, or upload a document/image below. Once uploaded, type a question here instead to ask about it — leave blank for a full study guide."></textarea>
 
       <div class="upload-row">
         <label class="upload-btn" id="docUploadBtn">
@@ -159,8 +159,6 @@
           <input type="file" id="imgInput" accept="image/*">
         </label>
       </div>
-
-      <input type="text" id="customPrompt" placeholder="Leave blank for a full study guide, or ask a question — e.g. 'What is the applicant's name?'">
 
       <div class="row">
         <span id="status"></span>
@@ -195,6 +193,7 @@ let docImages = null;
 let imgFile = null;
 let lastGeneratedData = null;
 let chatHistory = [];
+let hasGeneratedOnce = false;
 
 const authScreen = document.getElementById('authScreen');
 const appScreen = document.getElementById('appScreen');
@@ -257,7 +256,6 @@ checkExistingSession();
 
 const genBtn = document.getElementById('genBtn');
 const notesInput = document.getElementById('notesInput');
-const customPrompt = document.getElementById('customPrompt');
 const output = document.getElementById('output');
 const status = document.getElementById('status');
 const docInput = document.getElementById('docInput');
@@ -283,12 +281,18 @@ async function renderPdfPagesAsImages(buf, maxPages) {
   return images;
 }
 
+function resetFileState() {
+  docFile = null; docImages = null; imgFile = null;
+  docFname.textContent = ""; imgFname.textContent = "";
+  docUploadBtn.classList.remove('active'); imgUploadBtn.classList.remove('active');
+  chatHistory = []; hasGeneratedOnce = false;
+  notesInput.value = "";
+}
+
 docInput.addEventListener('change', async () => {
   const file = docInput.files[0];
   if (!file) return;
-  imgFile = null; imgFname.textContent = ""; imgUploadBtn.classList.remove('active');
-  docFile = null; docImages = null;
-  chatHistory = [];
+  resetFileState();
   docFname.textContent = "Reading " + file.name + "...";
   try {
     if (file.name.endsWith('.pdf')) {
@@ -320,6 +324,7 @@ docInput.addEventListener('change', async () => {
       docFname.textContent = "✓ " + file.name;
     }
     docUploadBtn.classList.add('active');
+    notesInput.placeholder = "Document uploaded. Leave blank for a full study guide, or type a question about it here.";
   } catch (err) {
     console.error(err);
     docFname.textContent = "Couldn't read this file. Try another.";
@@ -330,13 +335,13 @@ docInput.addEventListener('change', async () => {
 imgInput.addEventListener('change', () => {
   const file = imgInput.files[0];
   if (!file) return;
-  docFile = null; docImages = null; docFname.textContent = ""; docUploadBtn.classList.remove('active');
-  chatHistory = [];
+  resetFileState();
   const reader = new FileReader();
   reader.onload = () => {
     imgFile = { name: file.name, base64: reader.result };
     imgFname.textContent = "✓ " + file.name;
     imgUploadBtn.classList.add('active');
+    notesInput.placeholder = "Image uploaded. Leave blank for a full study guide, or type a question about it here.";
   };
   reader.readAsDataURL(file);
 });
@@ -372,30 +377,35 @@ function showUpgradeCard(heading) {
 }
 
 genBtn.addEventListener('click', async () => {
-  const pastedNotes = notesInput.value.trim();
-  const question = customPrompt.value.trim();
-  const isDocUpload = !!docFile || !!docImages;
-  const isChatTurn = question.length > 0 && (chatHistory.length > 0 || isDocUpload || !!imgFile || pastedNotes.length > 0);
+  const typedText = notesInput.value.trim();
+  const isFileUploaded = !!docFile || !!docImages || !!imgFile;
+  const isQuestion = isFileUploaded && hasGeneratedOnce === true && typedText.length > 0;
+  const isFirstAskOnUpload = isFileUploaded && !hasGeneratedOnce && typedText.length > 0;
 
-  if (!pastedNotes && !isDocUpload && !imgFile && !question) {
-    status.textContent = "Paste notes, upload a document/image, or ask a question.";
+  if (!typedText && !isFileUploaded) {
+    status.textContent = "Paste notes, or upload a document/image first.";
     return;
   }
 
   if (!currentProfile.is_subscribed) {
-    if (isDocUpload && currentProfile.documents_used >= FREE_DOC_LIMIT) {
+    if (isFileUploaded && docFile && currentProfile.documents_used >= FREE_DOC_LIMIT && !hasGeneratedOnce) {
       showUpgradeCard("You've used your free document upload"); return;
     }
-    if (imgFile && currentProfile.images_used >= FREE_IMG_LIMIT) {
+    if (isFileUploaded && docImages && currentProfile.documents_used >= FREE_DOC_LIMIT && !hasGeneratedOnce) {
+      showUpgradeCard("You've used your free document upload"); return;
+    }
+    if (isFileUploaded && imgFile && currentProfile.images_used >= FREE_IMG_LIMIT && !hasGeneratedOnce) {
       showUpgradeCard("You've used your free image upload"); return;
     }
-    if (question && chatHistory.length >= 1) {
+    if ((isQuestion || isFirstAskOnUpload) && chatHistory.length >= 1) {
       showUpgradeCard("Follow-up questions are a paid feature"); return;
     }
-    if (!isDocUpload && !imgFile && !question && currentProfile.generations_used >= FREE_LIMIT) {
+    if (!isFileUploaded && currentProfile.generations_used >= FREE_LIMIT) {
       showUpgradeCard("You're out of free generations"); return;
     }
   }
+
+  const question = (isFileUploaded && typedText.length > 0) ? typedText : "";
 
   genBtn.disabled = true;
   status.innerHTML = '<span class="spinner"></span> Working...';
@@ -405,7 +415,7 @@ genBtn.addEventListener('click', async () => {
     if (imgFile) payload.images = [imgFile.base64];
     else if (docImages) payload.images = docImages;
     else if (docFile) payload.notes = docFile.text;
-    else payload.notes = pastedNotes;
+    else payload.notes = typedText;
 
     const response = await fetch("/api/generate", {
       method: "POST",
@@ -418,7 +428,7 @@ genBtn.addEventListener('click', async () => {
     if (question) {
       chatHistory.push({ q: question, a: raw });
       renderChat();
-      customPrompt.value = "";
+      notesInput.value = "";
     } else {
       let parsed;
       try {
@@ -428,12 +438,14 @@ genBtn.addEventListener('click', async () => {
       }
       lastGeneratedData = parsed;
       renderOutput(parsed);
+      hasGeneratedOnce = true;
+      if (isFileUploaded) notesInput.value = "";
     }
 
     if (!currentProfile.is_subscribed) {
       const updates = {};
       if (imgFile) updates.images_used = currentProfile.images_used + 1;
-      else if (isDocUpload) updates.documents_used = currentProfile.documents_used + 1;
+      else if (docFile || docImages) updates.documents_used = currentProfile.documents_used + 1;
       else updates.generations_used = currentProfile.generations_used + 1;
       await sb.from('profiles').update(updates).eq('id', currentUser.id);
       Object.assign(currentProfile, updates);
