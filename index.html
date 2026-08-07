@@ -8,6 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
 <style>
   :root{
     --bg:#0f1115; --panel:#171a21; --panel2:#1e222b;
@@ -52,12 +53,17 @@
   .topbar button{padding:.5rem 1rem; font-size:.85rem;}
   .upload-row{ display:flex; gap:.8rem; margin-top:.9rem; flex-wrap:wrap; }
   .upload-btn{ flex:1; min-width:160px; background:var(--panel2); border:1px dashed var(--border); color:var(--muted);
-    border-radius:10px; padding:.9rem; text-align:center; font-size:.85rem;
+    border-radius:10px; padding:.9rem; text-align:center; font-size:.85rem; cursor:pointer;
     transition:border-color .15s, color .15s; }
   .upload-btn:hover{border-color:var(--accent); color:var(--text);}
-  .upload-btn.active{border-style:solid; border-color:var(--accent2); color:var(--accent2);}
-  .upload-btn .fname{display:block; margin-top:.3rem; font-size:.75rem; color:var(--text); word-break:break-all;}
-  .clear-file{ font-size:.7rem; color:var(--muted); text-decoration:underline; cursor:pointer; margin-top:.4rem; }
+  .file-chips{ display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.8rem; }
+  .file-chip{
+    display:flex; align-items:center; gap:.5rem; background:var(--panel2); border:1px solid var(--accent2);
+    border-radius:20px; padding:.4rem .7rem .4rem .9rem; font-size:.78rem; color:var(--accent2);
+  }
+  .file-chip .chip-status{color:var(--muted); font-style:italic;}
+  .chip-remove{ cursor:pointer; color:var(--muted); font-weight:700; padding:0 .2rem; }
+  .chip-remove:hover{color:#e07b7b;}
   .disclaimer{ font-size:.75rem; color:var(--muted); margin-top:.6rem; line-height:1.4; }
   .empty{ text-align:center; color:var(--muted); padding:3rem 1rem; border:1px dashed var(--border);
     border-radius:14px; margin-top:2rem; font-size:.95rem; }
@@ -79,8 +85,6 @@
     line-height:1.5; color:#c9d1d9; white-space:pre; }
   .code-lang{ font-size:.7rem; color:var(--accent2); text-transform:uppercase; letter-spacing:.5px;
     margin-bottom:.5rem; display:block; }
-  .chat-a pre{ background:#0a0c10; border:1px solid var(--border); border-radius:8px; padding:.8rem;
-    overflow-x:auto; font-family:'Consolas','Monaco',monospace; font-size:.83rem; margin:.5rem 0; white-space:pre; }
   .cards-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1rem; }
   .flip-card{background:transparent; height:150px; perspective:1000px; cursor:pointer;}
   .flip-inner{ position:relative; width:100%; height:100%; transition:transform .5s; transform-style:preserve-3d; }
@@ -119,7 +123,23 @@
   .chat-q{ align-self:flex-end; background:var(--accent); color:#0f1115; padding:.7rem 1rem; border-radius:12px 12px 2px 12px;
     max-width:80%; font-size:.92rem; font-weight:600; }
   .chat-a{ align-self:flex-start; background:var(--panel); border:1px solid var(--border); padding:.9rem 1.1rem;
-    border-radius:12px 12px 12px 2px; max-width:85%; font-size:.92rem; line-height:1.55; color:#d7d5cd; }
+    border-radius:12px 12px 12px 2px; max-width:90%; font-size:.92rem; line-height:1.6; color:#d7d5cd; }
+  .chat-a p{margin:.5rem 0;}
+  .chat-a p:first-child{margin-top:0;}
+  .chat-a p:last-child{margin-bottom:0;}
+  .chat-a h1, .chat-a h2, .chat-a h3, .chat-a h4{font-family:Georgia,serif; color:var(--accent2); margin:1rem 0 .5rem;}
+  .chat-a h1:first-child, .chat-a h2:first-child, .chat-a h3:first-child{margin-top:0;}
+  .chat-a ul, .chat-a ol{margin:.5rem 0; padding-left:1.3rem;}
+  .chat-a li{margin-bottom:.35rem;}
+  .chat-a strong{color:var(--text); font-weight:700;}
+  .chat-a table{width:100%; border-collapse:collapse; margin:.8rem 0; font-size:.85rem; display:block; overflow-x:auto;}
+  .chat-a th, .chat-a td{border:1px solid var(--border); padding:.5rem .7rem; text-align:left;}
+  .chat-a th{background:var(--panel2); color:var(--accent2); font-weight:600;}
+  .chat-a code{background:#0a0c10; padding:.15rem .4rem; border-radius:4px; font-family:'Consolas','Monaco',monospace; font-size:.85em;}
+  .chat-a pre{ background:#0a0c10; border:1px solid var(--border); border-radius:8px; padding:.9rem;
+    overflow-x:auto; margin:.6rem 0; }
+  .chat-a pre code{background:none; padding:0; font-size:.83rem; line-height:1.5;}
+  .chat-a hr{border:none; border-top:1px solid var(--border); margin:1rem 0;}
   .modal-overlay{
     position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; align-items:flex-start;
     justify-content:center; padding:4rem 1rem; z-index:100; overflow-y:auto;
@@ -153,7 +173,7 @@
 <div id="authScreen">
   <div class="hero">
     <h1>Study<span>Forge</span></h1>
-    <p>Paste notes, upload a document, or snap a photo. Get a study guide, or ask it anything.</p>
+    <p>Paste notes, upload documents, or snap photos. Get a study guide, or ask it anything.</p>
     <span class="badge">Powered by AI · Free to try</span>
   </div>
   <div class="auth-card">
@@ -186,26 +206,20 @@
 
   <div class="wrap">
     <div class="input-card">
-      <textarea id="notesInput" placeholder="Paste notes here, ask for code in any language, or upload a document/image below. Once uploaded, type a question here instead to ask about it — leave blank for a full study guide."></textarea>
+      <textarea id="notesInput" placeholder="Paste notes here, ask for code in any language, or upload documents/images below. Once uploaded, type a question here instead to ask about them — leave blank for a full study guide."></textarea>
 
       <div class="upload-row">
-        <div class="upload-btn" id="docUploadBtn">
-          <label style="cursor:pointer; display:block;">
-            <span id="docLabel">📄 Upload document (PDF / Word / TXT)</span>
-            <input type="file" id="docInput" accept=".pdf,.docx,.txt" style="display:none;">
-          </label>
-          <span class="fname" id="docFname"></span>
-          <span class="clear-file hidden" id="docClear">✕ remove</span>
-        </div>
-        <div class="upload-btn" id="imgUploadBtn">
-          <label style="cursor:pointer; display:block;">
-            <span id="imgLabel">🖼️ Upload image of notes</span>
-            <input type="file" id="imgInput" accept="image/*" style="display:none;">
-          </label>
-          <span class="fname" id="imgFname"></span>
-          <span class="clear-file hidden" id="imgClear">✕ remove</span>
-        </div>
+        <label class="upload-btn" style="cursor:pointer;">
+          📄 Upload documents (PDF / Word / TXT)
+          <input type="file" id="docInput" accept=".pdf,.docx,.txt" multiple style="display:none;">
+        </label>
+        <label class="upload-btn" style="cursor:pointer;">
+          🖼️ Upload images of notes
+          <input type="file" id="imgInput" accept="image/*" multiple style="display:none;">
+        </label>
       </div>
+
+      <div class="file-chips" id="fileChips"></div>
 
       <div class="disclaimer">AI-read text from images/scans may occasionally misread names or numbers — double-check critical details against the original.</div>
 
@@ -247,19 +261,20 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const FREE_LIMIT = 5;
 const FREE_DOC_LIMIT = 1;
 const UPGRADE_LINK = "PASTE_YOUR_LEMON_SQUEEZY_LINK_HERE";
-const DEFAULT_PLACEHOLDER = "Paste notes here, ask for code in any language, or upload a document/image below. Once uploaded, type a question here instead to ask about it — leave blank for a full study guide.";
+const DEFAULT_PLACEHOLDER = "Paste notes here, ask for code in any language, or upload documents/images below. Once uploaded, type a question here instead to ask about them — leave blank for a full study guide.";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+marked.setOptions({ breaks: true, gfm: true });
 
 let currentUser = null;
 let currentProfile = null;
-let docFile = null;
-let imgFile = null;
+let uploadedFiles = [];
 let lastGeneratedData = null;
 let chatHistory = [];
 let hasGeneratedOnce = false;
 let currentSourceText = "";
 let currentSessionId = null;
+let fileCounter = 0;
 
 const authScreen = document.getElementById('authScreen');
 const appScreen = document.getElementById('appScreen');
@@ -332,26 +347,61 @@ const chatContainer = document.getElementById('chatContainer');
 const status = document.getElementById('status');
 const docInput = document.getElementById('docInput');
 const imgInput = document.getElementById('imgInput');
-const docUploadBtn = document.getElementById('docUploadBtn');
-const imgUploadBtn = document.getElementById('imgUploadBtn');
-const docFname = document.getElementById('docFname');
-const imgFname = document.getElementById('imgFname');
-const docClear = document.getElementById('docClear');
-const imgClear = document.getElementById('imgClear');
+const fileChips = document.getElementById('fileChips');
 const historyModal = document.getElementById('historyModal');
 const historyList = document.getElementById('historyList');
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str || "";
+  return div.innerHTML;
+}
+
+function mdInline(str) {
+  try { return marked.parseInline(str || ""); } catch(e) { return escapeHtml(str); }
+}
+
+function mdBlock(str) {
+  try { return marked.parse(str || ""); } catch(e) { return `<p>${escapeHtml(str)}</p>`; }
+}
 
 function updateStickyVisibility() {
   if (hasGeneratedOnce) stickyAsk.classList.remove('hidden');
   else stickyAsk.classList.add('hidden');
 }
 
+function renderFileChips() {
+  if (uploadedFiles.length === 0) { fileChips.innerHTML = ""; return; }
+  fileChips.innerHTML = uploadedFiles.map(f => `
+    <div class="file-chip">
+      <span>${f.type === 'img' ? '🖼️' : '📄'} ${escapeHtml(f.name)}</span>
+      ${f.status === 'reading' ? '<span class="chip-status">reading...</span>' : ''}
+      <span class="chip-remove" data-id="${f.id}">✕</span>
+    </div>
+  `).join('');
+  fileChips.querySelectorAll('.chip-remove').forEach(el => {
+    el.addEventListener('click', () => removeFile(el.dataset.id));
+  });
+}
+
+function removeFile(id) {
+  uploadedFiles = uploadedFiles.filter(f => f.id !== id);
+  renderFileChips();
+  if (uploadedFiles.length === 0 && !hasGeneratedOnce) {
+    notesInput.placeholder = DEFAULT_PLACEHOLDER;
+  }
+}
+
+function combinedSourceText() {
+  return uploadedFiles
+    .filter(f => f.text)
+    .map(f => `--- ${f.name} ---\n${f.text}`)
+    .join('\n\n');
+}
+
 function startNewSession() {
-  docFile = null; imgFile = null;
-  docFname.textContent = ""; imgFname.textContent = "";
-  docClear.classList.add('hidden'); imgClear.classList.add('hidden');
-  docUploadBtn.classList.remove('active'); imgUploadBtn.classList.remove('active');
-  docInput.value = ""; imgInput.value = "";
+  uploadedFiles = [];
+  fileChips.innerHTML = "";
   chatHistory = [];
   hasGeneratedOnce = false;
   currentSourceText = "";
@@ -389,7 +439,7 @@ document.getElementById('historyBtn').addEventListener('click', async () => {
     const div = document.createElement('div');
     div.className = 'history-item';
     const date = new Date(s.updated_at).toLocaleString();
-    div.innerHTML = `<div class="h-title">${(s.title || "Untitled session")}</div><div class="h-date">${date}</div>`;
+    div.innerHTML = `<div class="h-title">${escapeHtml(s.title || "Untitled session")}</div><div class="h-date">${date}</div>`;
     div.onclick = () => loadSession(s.id);
     historyList.appendChild(div);
   });
@@ -455,71 +505,47 @@ async function renderPdfPagesAsImages(buf, maxPages) {
   return images;
 }
 
-function clearDoc(e) {
-  if (e) e.stopPropagation();
-  startNewSession();
-}
-function clearImg(e) {
-  if (e) e.stopPropagation();
-  startNewSession();
-}
-docClear.addEventListener('click', clearDoc);
-imgClear.addEventListener('click', clearImg);
-
-docInput.addEventListener('change', async () => {
-  const file = docInput.files[0];
-  if (!file) return;
-  startNewSession();
-  genBtn.disabled = true;
-  docFname.textContent = "Reading " + file.name + "...";
+async function processDocFile(file) {
+  const id = 'f' + (fileCounter++);
+  const entry = { id, name: file.name, type: 'doc', text: '', status: 'reading' };
+  uploadedFiles.push(entry);
+  renderFileChips();
   try {
+    let text = "";
     if (file.name.endsWith('.pdf')) {
       const buf = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: buf.slice(0) }).promise;
-      let text = "";
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const content = await page.getTextContent();
         text += content.items.map(it => it.str).join(' ') + '\n';
       }
       if (text.trim().length < 40) {
-        docFname.textContent = "Reading scanned pages...";
         const images = await renderPdfPagesAsImages(buf.slice(0), 2);
-        const extracted = await extractTextFromImages(images);
-        docFile = { name: file.name, text: extracted };
-        docFname.textContent = "✓ " + file.name + " (ready)";
-      } else {
-        docFile = { name: file.name, text: text.slice(0, 20000) };
-        docFname.textContent = "✓ " + file.name;
+        text = await extractTextFromImages(images);
       }
     } else if (file.name.endsWith('.docx')) {
       const buf = await file.arrayBuffer();
       const result = await mammoth.extractRawText({ arrayBuffer: buf });
-      docFile = { name: file.name, text: result.value.slice(0, 20000) };
-      docFname.textContent = "✓ " + file.name;
+      text = result.value;
     } else {
-      const text = await file.text();
-      docFile = { name: file.name, text: text.slice(0, 20000) };
-      docFname.textContent = "✓ " + file.name;
+      text = await file.text();
     }
-    docUploadBtn.classList.add('active');
-    docClear.classList.remove('hidden');
-    notesInput.placeholder = "Document ready. Leave blank for a full study guide, or type a question about it here.";
+    entry.text = text.slice(0, 20000);
+    entry.status = 'ready';
   } catch (err) {
     console.error(err);
-    docFname.textContent = "Couldn't read this file. Try another.";
-    docFile = null;
-  } finally {
-    genBtn.disabled = false;
+    entry.status = 'error';
+    entry.text = '';
   }
-});
+  renderFileChips();
+}
 
-imgInput.addEventListener('change', async () => {
-  const file = imgInput.files[0];
-  if (!file) return;
-  startNewSession();
-  genBtn.disabled = true;
-  imgFname.textContent = "Reading " + file.name + "...";
+async function processImgFile(file) {
+  const id = 'f' + (fileCounter++);
+  const entry = { id, name: file.name, type: 'img', text: '', status: 'reading' };
+  uploadedFiles.push(entry);
+  renderFileChips();
   try {
     const base64 = await new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -528,17 +554,44 @@ imgInput.addEventListener('change', async () => {
       reader.readAsDataURL(file);
     });
     const extracted = await extractTextFromImages([base64]);
-    docFile = { name: file.name, text: extracted };
-    imgFname.textContent = "✓ " + file.name + " (ready)";
-    imgUploadBtn.classList.add('active');
-    imgClear.classList.remove('hidden');
-    notesInput.placeholder = "Image ready. Leave blank for a full study guide, or type a question about it here.";
+    entry.text = extracted;
+    entry.status = 'ready';
   } catch (err) {
     console.error(err);
-    imgFname.textContent = "Couldn't read this image. Try another.";
-  } finally {
-    genBtn.disabled = false;
+    entry.status = 'error';
+    entry.text = '';
   }
+  renderFileChips();
+}
+
+docInput.addEventListener('change', async () => {
+  const files = Array.from(docInput.files);
+  docInput.value = "";
+  if (files.length === 0) return;
+  genBtn.disabled = true;
+  notesInput.placeholder = "Reading files...";
+  for (const file of files) {
+    await processDocFile(file);
+  }
+  notesInput.placeholder = hasGeneratedOnce
+    ? "Ask a follow-up question about this, or click + New to start something fresh."
+    : "Files ready. Leave blank for a full study guide, or type a question about them here.";
+  genBtn.disabled = false;
+});
+
+imgInput.addEventListener('change', async () => {
+  const files = Array.from(imgInput.files);
+  imgInput.value = "";
+  if (files.length === 0) return;
+  genBtn.disabled = true;
+  notesInput.placeholder = "Reading images...";
+  for (const file of files) {
+    await processImgFile(file);
+  }
+  notesInput.placeholder = hasGeneratedOnce
+    ? "Ask a follow-up question about this, or click + New to start something fresh."
+    : "Files ready. Leave blank for a full study guide, or type a question about them here.";
+  genBtn.disabled = false;
 });
 
 function renderGenerateState() {
@@ -597,10 +650,10 @@ async function saveSession() {
 
 async function runGenerate(questionText) {
   const typedText = questionText !== undefined ? questionText : notesInput.value.trim();
-  const isFileUploaded = !!docFile;
+  const isFileUploaded = uploadedFiles.length > 0;
 
   if (!typedText && !isFileUploaded && !hasGeneratedOnce) {
-    status.textContent = "Paste notes, or upload a document/image first.";
+    status.textContent = "Paste notes, or upload documents/images first.";
     return;
   }
   if (!typedText && hasGeneratedOnce) {
@@ -628,7 +681,7 @@ async function runGenerate(questionText) {
 
   try {
     const payload = { question: isQuestion ? typedText : "", history: chatHistory };
-    payload.notes = hasGeneratedOnce ? currentSourceText : (docFile ? docFile.text : typedText);
+    payload.notes = hasGeneratedOnce ? currentSourceText : (isFileUploaded ? combinedSourceText() : typedText);
 
     const response = await fetch("/api/generate", {
       method: "POST",
@@ -658,7 +711,7 @@ async function runGenerate(questionText) {
         throw new Error("The response got cut off — try again.");
       }
       lastGeneratedData = parsed;
-      currentSourceText = docFile ? docFile.text : typedText;
+      currentSourceText = isFileUploaded ? combinedSourceText() : typedText;
       renderOutput(parsed, true);
       hasGeneratedOnce = true;
       notesInput.value = "";
@@ -704,28 +757,10 @@ stickyInput.addEventListener('keydown', (e) => {
   }
 });
 
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-function formatChatAnswer(text) {
-  const parts = text.split(/```(\w*)\n?([\s\S]*?)```/g);
-  let html = "";
-  for (let i = 0; i < parts.length; i += 3) {
-    if (parts[i]) html += `<p>${escapeHtml(parts[i]).replace(/\n/g, '<br>')}</p>`;
-    if (parts[i+2] !== undefined) {
-      html += `<pre>${escapeHtml(parts[i+2])}</pre>`;
-    }
-  }
-  return html || escapeHtml(text);
-}
-
 function renderChat() {
   let html = `<div class="section"><div class="section-title"><span class="section-title-left">Conversation</span></div><div class="chat-log">`;
   chatHistory.forEach(turn => {
-    html += `<div class="chat-q">${turn.q}</div><div class="chat-a">${formatChatAnswer(turn.a)}</div>`;
+    html += `<div class="chat-q">${escapeHtml(turn.q)}</div><div class="chat-a">${mdBlock(turn.a)}</div>`;
   });
   html += `</div></div>`;
   chatContainer.innerHTML = html;
@@ -738,7 +773,7 @@ function renderOutput(data, clearChat) {
     html += `<div class="section">
       <div class="section-title"><span class="section-title-left">Code</span></div>
       <div class="code-block">
-        <span class="code-lang">${data.code.language || "code"}</span>
+        <span class="code-lang">${escapeHtml(data.code.language || "code")}</span>
         <pre>${escapeHtml(data.code.content)}</pre>
       </div>
     </div>`;
@@ -750,8 +785,8 @@ function renderOutput(data, clearChat) {
       <button class="btn-ghost btn-small" id="downloadBtn">Download PDF</button>
     </div>`;
   data.guide.forEach(sec => {
-    html += `<div class="guide-card"><h3>${sec.heading}</h3><ul>`;
-    sec.points.forEach(p => html += `<li>${p}</li>`);
+    html += `<div class="guide-card"><h3>${mdInline(sec.heading)}</h3><ul>`;
+    sec.points.forEach(p => html += `<li>${mdInline(p)}</li>`);
     html += `</ul></div>`;
   });
   html += `</div>
@@ -761,8 +796,8 @@ function renderOutput(data, clearChat) {
   data.flashcards.forEach((c) => {
     html += `<div class="flip-card" onclick="this.classList.toggle('flipped')">
       <div class="flip-inner">
-        <div class="flip-face flip-front">${c.q}<span class="flip-hint">tap to flip</span></div>
-        <div class="flip-face flip-back">${c.a}<span class="flip-hint">tap to flip</span></div>
+        <div class="flip-face flip-front">${mdInline(c.q)}<span class="flip-hint">tap to flip</span></div>
+        <div class="flip-face flip-back">${mdInline(c.a)}<span class="flip-hint">tap to flip</span></div>
       </div>
     </div>`;
   });
@@ -782,10 +817,11 @@ function downloadPDF() {
   doc.setFontSize(12);
   lastGeneratedData.guide.forEach(sec => {
     if (y > 270) { doc.addPage(); y = 20; }
-    doc.setFont(undefined, 'bold'); doc.text(sec.heading, 14, y); y += 7;
+    doc.setFont(undefined, 'bold'); doc.text(sec.heading.replace(/\*\*/g,''), 14, y); y += 7;
     doc.setFont(undefined, 'normal');
     sec.points.forEach(p => {
-      const lines = doc.splitTextToSize("• " + p, 180);
+      const clean = p.replace(/\*\*/g,'').replace(/\|/g,' ');
+      const lines = doc.splitTextToSize("• " + clean, 180);
       lines.forEach(line => { if (y > 270) { doc.addPage(); y = 20; } doc.text(line, 16, y); y += 6; });
     });
     y += 4;
@@ -796,10 +832,10 @@ function downloadPDF() {
   lastGeneratedData.flashcards.forEach((c, i) => {
     if (y > 265) { doc.addPage(); y = 20; }
     doc.setFont(undefined, 'bold');
-    const qLines = doc.splitTextToSize((i+1) + ". " + c.q, 180);
+    const qLines = doc.splitTextToSize((i+1) + ". " + c.q.replace(/\*\*/g,''), 180);
     qLines.forEach(line => { doc.text(line, 14, y); y += 6; });
     doc.setFont(undefined, 'normal');
-    const aLines = doc.splitTextToSize("A: " + c.a, 176);
+    const aLines = doc.splitTextToSize("A: " + c.a.replace(/\*\*/g,''), 176);
     aLines.forEach(line => { doc.text(line, 18, y); y += 6; });
     y += 4;
   });
