@@ -271,8 +271,6 @@ const SUPABASE_URL = "https://zewjmxgqvsexnsrddmlu.supabase.co";
 const SUPABASE_KEY = "sb_publishable_rz1How5fizOOzI11w_QJ3Q_rSGkhE9d";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// TESTING MODE: true = no limits for anyone (use this while your friends test).
-// Set to false when you're ready to officially launch and enforce free-tier limits.
 const TESTING_MODE = true;
 
 const FREE_LIMIT = 5;
@@ -737,6 +735,7 @@ async function runGenerate(questionText) {
   try {
     const payload = { question: isQuestion ? typedText : "", history: chatHistory };
     payload.notes = hasGeneratedOnce ? currentSourceText : (isFileUploaded ? combinedSourceText() : typedText);
+    payload.sourceType = isFileUploaded ? 'file' : 'topic';
 
     let raw = "";
     let lastFriendly = "";
