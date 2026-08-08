@@ -13,7 +13,7 @@
   :root{
     --bg:#0f1115; --panel:#171a21; --panel2:#1e222b;
     --border:#2a2f3a; --text:#eceae3; --muted:#8b90a0;
-    --accent:#4f9dff; --accent2:#7bd0c9;
+    --accent:#4f9dff; --accent2:#7bd0c9; --sidebar-w:260px;
   }
   *{box-sizing:border-box;}
   body{ margin:0; background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; }
@@ -25,17 +25,14 @@
   .hero p{ color:var(--muted); margin:.9rem auto 0; font-size:1.1rem; max-width:480px; line-height:1.5;}
   .badge{ display:inline-block; margin-top:1.2rem; font-size:.78rem; color:var(--accent2); border:1px solid var(--border);
     background:var(--panel); padding:.35rem .8rem; border-radius:20px; }
-  .wrap{max-width:820px; margin:0 auto; padding:3rem 1.5rem 8rem;}
-  .auth-card, .input-card{ background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:1.5rem; max-width:420px; margin:2rem auto; }
-  .input-card{max-width:none; margin:0;}
+  .auth-card{ background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:1.5rem; max-width:420px; margin:2rem auto; }
   input[type=email], input[type=password], input[type=text]{
     width:100%; background:var(--panel2); border:1px solid var(--border); border-radius:8px; color:var(--text);
     padding:.7rem .9rem; margin-top:.6rem; font-size:.95rem; font-family:inherit; }
   input:focus{outline:none; border-color:var(--accent);}
-  textarea{ width:100%; min-height:170px; background:var(--panel2); border:1px solid var(--border); border-radius:10px;
+  textarea{ width:100%; min-height:150px; background:var(--panel2); border:1px solid var(--border); border-radius:10px;
     color:var(--text); padding:1rem; font-size:.95rem; resize:vertical; font-family:inherit; }
   textarea:focus{outline:none; border-color:var(--accent);}
-  .row{display:flex; justify-content:space-between; align-items:center; margin-top:1rem; flex-wrap:wrap; gap:.6rem;}
   button{ background:var(--accent); color:#0f1115; border:none; padding:.8rem 1.8rem; border-radius:8px; font-size:1rem;
     cursor:pointer; font-weight:700; transition:opacity .15s, transform .1s; }
   button:hover{opacity:.9;}
@@ -44,19 +41,51 @@
   .btn-full{width:100%; margin-top:1rem;}
   .btn-ghost{ background:transparent; border:1px solid var(--border); color:var(--text); }
   .btn-small{padding:.5rem 1rem; font-size:.85rem;}
-  #status{color:var(--muted); font-size:.9rem;}
+  #status{color:var(--muted); font-size:.85rem;}
   #authError{color:#e07b7b; font-size:.85rem; margin-top:.6rem;}
-  .topbar{ display:flex; justify-content:space-between; align-items:center; padding:1rem 1.5rem;
-    border-bottom:1px solid var(--border); max-width:820px; margin:0 auto; gap:.6rem; flex-wrap:wrap; }
-  .topbar-left{display:flex; align-items:center; gap:.6rem; flex-wrap:wrap;}
-  .topbar span{font-size:.85rem; color:var(--muted);}
-  .topbar button{padding:.5rem 1rem; font-size:.85rem;}
-  .upload-row{ display:flex; gap:.8rem; margin-top:.9rem; flex-wrap:wrap; }
-  .upload-btn{ flex:1; min-width:160px; background:var(--panel2); border:1px dashed var(--border); color:var(--muted);
-    border-radius:10px; padding:.9rem; text-align:center; font-size:.85rem; cursor:pointer;
-    transition:border-color .15s, color .15s; }
-  .upload-btn:hover{border-color:var(--accent); color:var(--text);}
-  .file-chips{ display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.8rem; }
+
+  .app-layout{display:flex; min-height:100vh;}
+  .sidebar{ width:var(--sidebar-w); flex-shrink:0; background:var(--panel); border-right:1px solid var(--border);
+    display:flex; flex-direction:column; padding:1rem; }
+  .sidebar-logo{font-family:Georgia,serif; font-size:1.3rem; margin:0 0 1rem; display:flex; align-items:center; gap:.4rem;}
+  .sidebar-logo span{color:var(--accent);}
+  .sidebar-new{margin:0 0 1rem;}
+  .sidebar-section-label{font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; margin:.3rem 0 .6rem;}
+  .sidebar-history{flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:.4rem; min-height:0;}
+  .sidebar-history-item{
+    display:flex; justify-content:space-between; align-items:center; background:var(--panel2);
+    border:1px solid var(--border); border-radius:8px; padding:.6rem .7rem; cursor:pointer; font-size:.8rem;
+    transition:border-color .15s;
+  }
+  .sidebar-history-item:hover{border-color:var(--accent);}
+  .sidebar-history-item.active{border-color:var(--accent); background:rgba(79,157,255,0.08);}
+  .h-title{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;}
+  .h-delete{color:var(--muted); margin-left:.5rem; font-size:.9rem;}
+  .h-delete:hover{color:#e07b7b;}
+  .sidebar-empty{color:var(--muted); font-size:.78rem; padding:.4rem;}
+  .sidebar-footer{border-top:1px solid var(--border); padding-top:1rem; margin-top:1rem; font-size:.78rem; color:var(--muted);}
+  .sidebar-footer #userEmail{display:block; margin-bottom:.6rem; word-break:break-all;}
+
+  .sidebar-toggle{ display:none; position:fixed; top:1rem; left:1rem; z-index:70; background:var(--panel);
+    border:1px solid var(--border); color:var(--text); border-radius:8px; padding:.5rem .8rem; font-size:1.1rem; }
+  .sidebar-overlay{position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:65;}
+
+  .main-content{flex:1; min-width:0;}
+  .wrap{max-width:780px; margin:0 auto; padding:3rem 1.5rem 8rem;}
+  .input-card{ background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:1.5rem; }
+
+  .attach-row{display:flex; align-items:center; gap:.7rem; margin-top:.9rem; flex-wrap:wrap;}
+  .attach-wrap{position:relative;}
+  .attach-btn{ width:42px; height:42px; padding:0; border-radius:50%; font-size:1.4rem; line-height:1;
+    background:var(--panel2); color:var(--text); border:1px solid var(--border); font-weight:400; }
+  .attach-btn:hover{border-color:var(--accent); opacity:1;}
+  .attach-menu{ position:absolute; bottom:52px; left:0; background:var(--panel); border:1px solid var(--border);
+    border-radius:10px; padding:.4rem; min-width:190px; box-shadow:0 6px 24px rgba(0,0,0,.4); z-index:20; }
+  .attach-option{padding:.65rem .8rem; border-radius:6px; cursor:pointer; font-size:.85rem;}
+  .attach-option:hover{background:var(--panel2);}
+  .attach-row .spacer{flex:1;}
+
+  .file-chips{ display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.9rem; }
   .file-chip{
     display:flex; align-items:center; gap:.5rem; background:var(--panel2); border:1px solid var(--accent2);
     border-radius:20px; padding:.4rem .7rem .4rem .9rem; font-size:.78rem; color:var(--accent2);
@@ -64,7 +93,7 @@
   .file-chip .chip-status{color:var(--muted); font-style:italic;}
   .chip-remove{ cursor:pointer; color:var(--muted); font-weight:700; padding:0 .2rem; }
   .chip-remove:hover{color:#e07b7b;}
-  .disclaimer{ font-size:.75rem; color:var(--muted); margin-top:.6rem; line-height:1.4; }
+  .disclaimer{ font-size:.75rem; color:var(--muted); margin-top:.8rem; line-height:1.4; }
   .empty{ text-align:center; color:var(--muted); padding:3rem 1rem; border:1px dashed var(--border);
     border-radius:14px; margin-top:2rem; font-size:.95rem; }
   .section{margin-top:2.5rem; animation:fadeIn .4s ease;}
@@ -77,15 +106,13 @@
   .guide-card h3{margin:0 0 .6rem; color:var(--accent2); font-size:1.05rem;}
   .guide-card ul{margin:0; padding-left:1.2rem; color:#d7d5cd;}
   .guide-card li{margin-bottom:.4rem; line-height:1.5;}
-  .code-block{
-    background:#0a0c10; border:1px solid var(--border); border-radius:10px;
-    padding:1rem; margin-bottom:1.5rem; overflow-x:auto; position:relative;
-  }
+  .code-block{ background:#0a0c10; border:1px solid var(--border); border-radius:10px;
+    padding:1rem; margin-bottom:1.5rem; overflow-x:auto; }
   .code-block pre{ margin:0; font-family:'Consolas','Monaco',monospace; font-size:.85rem;
     line-height:1.5; color:#c9d1d9; white-space:pre; }
   .code-lang{ font-size:.7rem; color:var(--accent2); text-transform:uppercase; letter-spacing:.5px;
     margin-bottom:.5rem; display:block; }
-  .cards-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1rem; }
+  .cards-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:1rem; }
   .flip-card{background:transparent; height:150px; perspective:1000px; cursor:pointer;}
   .flip-inner{ position:relative; width:100%; height:100%; transition:transform .5s; transform-style:preserve-3d; }
   .flip-card.flipped .flip-inner{transform:rotateY(180deg);}
@@ -116,8 +143,7 @@
   .upgrade-card li:last-child{border-bottom:none;}
   .upgrade-card li::before{content:'✓'; color:var(--accent2); font-weight:700;}
   .upgrade-card button{ font-size:1.05rem; padding:.9rem 2.5rem; margin-top:.5rem;
-    box-shadow:0 4px 20px rgba(79,157,255,0.25); transition:transform .15s ease, box-shadow .15s ease; }
-  .upgrade-card button:hover{ transform:translateY(-2px); box-shadow:0 6px 26px rgba(79,157,255,0.4); opacity:1; }
+    box-shadow:0 4px 20px rgba(79,157,255,0.25); }
   .hidden{display:none !important;}
   .chat-log{margin-top:1rem; display:flex; flex-direction:column; gap:.8rem;}
   .chat-q{ align-self:flex-end; background:var(--accent); color:#0f1115; padding:.7rem 1rem; border-radius:12px 12px 2px 12px;
@@ -140,31 +166,21 @@
     overflow-x:auto; margin:.6rem 0; }
   .chat-a pre code{background:none; padding:0; font-size:.83rem; line-height:1.5;}
   .chat-a hr{border:none; border-top:1px solid var(--border); margin:1rem 0;}
-  .modal-overlay{
-    position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; align-items:flex-start;
-    justify-content:center; padding:4rem 1rem; z-index:100; overflow-y:auto;
-  }
-  .modal{
-    background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:1.5rem;
-    max-width:500px; width:100%; max-height:80vh; overflow-y:auto;
-  }
-  .modal h2{font-family:Georgia,serif; margin:0 0 1rem; font-size:1.3rem;}
-  .history-item{
-    background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:.8rem 1rem;
-    margin-bottom:.6rem; cursor:pointer; transition:border-color .15s;
-  }
-  .history-item:hover{border-color:var(--accent);}
-  .history-item .h-title{font-size:.9rem; font-weight:600; margin-bottom:.2rem;}
-  .history-item .h-date{font-size:.75rem; color:var(--muted);}
-  .modal-close{ text-align:right; margin-top:1rem; }
-  .sticky-ask{
-    position:fixed; bottom:0; left:0; right:0; background:var(--panel);
-    border-top:1px solid var(--border); padding:.8rem 1rem; z-index:60;
-    box-shadow:0 -4px 20px rgba(0,0,0,.3);
-  }
-  .sticky-ask-inner{ max-width:820px; margin:0 auto; display:flex; gap:.6rem; align-items:center; }
+
+  .sticky-ask{ position:fixed; bottom:0; left:var(--sidebar-w); right:0; background:var(--panel);
+    border-top:1px solid var(--border); padding:.8rem 1rem; z-index:60; box-shadow:0 -4px 20px rgba(0,0,0,.3); }
+  .sticky-ask-inner{ max-width:780px; margin:0 auto; display:flex; gap:.6rem; align-items:center; }
   .sticky-ask input{ flex:1; margin-top:0; }
   .sticky-ask button{ padding:.7rem 1.3rem; white-space:nowrap; }
+
+  @media (max-width:768px){
+    .sidebar{ position:fixed; top:0; left:0; bottom:0; z-index:70; transform:translateX(-100%);
+      transition:transform .2s ease; width:80vw; max-width:300px; }
+    .sidebar.open{transform:translateX(0);}
+    .sidebar-toggle{display:block;}
+    .sticky-ask{left:0;}
+    .wrap{padding-top:4.5rem;}
+  }
   @media (max-width:600px){ .hero h1{font-size:2.1rem;} }
 </style>
 </head>
@@ -194,48 +210,53 @@
   </div>
 </div>
 
-<div id="appScreen" class="hidden">
-  <div class="topbar">
-    <span id="userEmail"></span>
-    <div class="topbar-left">
-      <button id="newBtn" class="btn-ghost btn-small">+ New</button>
-      <button id="historyBtn" class="btn-ghost btn-small">History</button>
-      <button id="logoutBtn" class="btn-ghost btn-small">Log out</button>
+<div id="appScreen" class="hidden app-layout">
+  <button id="sidebarToggle" class="sidebar-toggle">☰</button>
+  <div id="sidebarOverlay" class="sidebar-overlay hidden"></div>
+
+  <div id="sidebar" class="sidebar">
+    <div class="sidebar-logo">Study<span>Forge</span></div>
+    <button id="newBtn" class="btn-full sidebar-new">+ New chat</button>
+    <div class="sidebar-section-label">History</div>
+    <div id="historyList" class="sidebar-history"><div class="sidebar-empty">No past sessions yet.</div></div>
+    <div class="sidebar-footer">
+      <span id="userEmail"></span>
+      <button id="logoutBtn" class="btn-ghost btn-small btn-full">Log out</button>
     </div>
   </div>
 
-  <div class="wrap">
-    <div class="input-card">
-      <textarea id="notesInput" placeholder="Paste notes here, ask for code in any language, or upload documents/images below. Once uploaded, type a question here instead to ask about them — leave blank for a full study guide."></textarea>
+  <div class="main-content">
+    <div class="wrap">
+      <div class="input-card">
+        <textarea id="notesInput" placeholder="Paste notes here, ask for code in any language, or attach files below. Once attached, type a question here instead — leave blank for a full study guide."></textarea>
 
-      <div class="upload-row">
-        <label class="upload-btn" style="cursor:pointer;">
-          📄 Upload documents (PDF / Word / TXT)
+        <div class="attach-row">
+          <div class="attach-wrap">
+            <button id="attachBtn" type="button" class="attach-btn">+</button>
+            <div id="attachMenu" class="attach-menu hidden">
+              <div class="attach-option" id="attachDocOption">📄 Upload document</div>
+              <div class="attach-option" id="attachImgOption">🖼️ Upload photo</div>
+            </div>
+          </div>
           <input type="file" id="docInput" accept=".pdf,.docx,.txt" multiple style="display:none;">
-        </label>
-        <label class="upload-btn" style="cursor:pointer;">
-          🖼️ Upload images of notes
           <input type="file" id="imgInput" accept="image/*" multiple style="display:none;">
-        </label>
+          <div class="spacer"></div>
+          <span id="status"></span>
+          <button id="genBtn">Generate</button>
+        </div>
+
+        <div class="file-chips" id="fileChips"></div>
+        <div class="disclaimer">AI-read text from images/scans may occasionally misread names or numbers — double-check critical details against the original.</div>
       </div>
 
-      <div class="file-chips" id="fileChips"></div>
-
-      <div class="disclaimer">AI-read text from images/scans may occasionally misread names or numbers — double-check critical details against the original.</div>
-
-      <div class="row">
-        <span id="status"></span>
-        <button id="genBtn">Generate</button>
+      <div id="guideContainer">
+        <div class="empty">Your study guide and flashcards will appear here once you generate them.</div>
       </div>
+      <div id="chatContainer"></div>
     </div>
 
-    <div id="guideContainer">
-      <div class="empty">Your study guide and flashcards will appear here once you generate them.</div>
-    </div>
-    <div id="chatContainer"></div>
+    <footer>StudyForge — built to make studying less painful.</footer>
   </div>
-
-  <footer>StudyForge — built to make studying less painful.</footer>
 </div>
 
 <div id="stickyAsk" class="sticky-ask hidden">
@@ -245,23 +266,19 @@
   </div>
 </div>
 
-<div id="historyModal" class="modal-overlay hidden">
-  <div class="modal">
-    <h2>Past sessions</h2>
-    <div id="historyList"></div>
-    <div class="modal-close"><button class="btn-ghost btn-small" id="closeHistory">Close</button></div>
-  </div>
-</div>
-
 <script>
 const SUPABASE_URL = "https://zewjmxgqvsexnsrddmlu.supabase.co";
 const SUPABASE_KEY = "sb_publishable_rz1How5fizOOzI11w_QJ3Q_rSGkhE9d";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// TESTING MODE: true = no limits for anyone (use this while your friends test).
+// Set to false when you're ready to officially launch and enforce free-tier limits.
+const TESTING_MODE = true;
+
 const FREE_LIMIT = 5;
 const FREE_DOC_LIMIT = 1;
 const UPGRADE_LINK = "PASTE_YOUR_LEMON_SQUEEZY_LINK_HERE";
-const DEFAULT_PLACEHOLDER = "Paste notes here, ask for code in any language, or upload documents/images below. Once uploaded, type a question here instead to ask about them — leave blank for a full study guide.";
+const DEFAULT_PLACEHOLDER = "Paste notes here, ask for code in any language, or attach files below. Once attached, type a question here instead — leave blank for a full study guide.";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 marked.setOptions({ breaks: true, gfm: true });
@@ -283,6 +300,13 @@ const signupForm = document.getElementById('signupForm');
 const stickyAsk = document.getElementById('stickyAsk');
 const stickyInput = document.getElementById('stickyInput');
 const stickySend = document.getElementById('stickySend');
+const sidebar = document.getElementById('sidebar');
+const sidebarToggle = document.getElementById('sidebarToggle');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+const attachBtn = document.getElementById('attachBtn');
+const attachMenu = document.getElementById('attachMenu');
+const attachDocOption = document.getElementById('attachDocOption');
+const attachImgOption = document.getElementById('attachImgOption');
 
 document.getElementById('showSignup').onclick = () => {
   loginForm.classList.add('hidden'); signupForm.classList.remove('hidden');
@@ -332,6 +356,7 @@ async function loadUser() {
   authScreen.classList.add('hidden'); appScreen.classList.remove('hidden');
   startNewSession();
   renderGenerateState();
+  refreshHistory();
 }
 
 async function checkExistingSession() {
@@ -348,19 +373,37 @@ const status = document.getElementById('status');
 const docInput = document.getElementById('docInput');
 const imgInput = document.getElementById('imgInput');
 const fileChips = document.getElementById('fileChips');
-const historyModal = document.getElementById('historyModal');
 const historyList = document.getElementById('historyList');
+
+sidebarToggle.addEventListener('click', () => {
+  sidebar.classList.add('open');
+  sidebarOverlay.classList.remove('hidden');
+});
+sidebarOverlay.addEventListener('click', () => {
+  sidebar.classList.remove('open');
+  sidebarOverlay.classList.add('hidden');
+});
+
+attachBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  attachMenu.classList.toggle('hidden');
+});
+document.addEventListener('click', (e) => {
+  if (!attachMenu.classList.contains('hidden') && !attachMenu.contains(e.target) && e.target !== attachBtn) {
+    attachMenu.classList.add('hidden');
+  }
+});
+attachDocOption.addEventListener('click', () => { attachMenu.classList.add('hidden'); docInput.click(); });
+attachImgOption.addEventListener('click', () => { attachMenu.classList.add('hidden'); imgInput.click(); });
 
 function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str || "";
   return div.innerHTML;
 }
-
 function mdInline(str) {
   try { return marked.parseInline(str || ""); } catch(e) { return escapeHtml(str); }
 }
-
 function mdBlock(str) {
   try { return marked.parse(str || ""); } catch(e) { return `<p>${escapeHtml(str)}</p>`; }
 }
@@ -393,10 +436,7 @@ function removeFile(id) {
 }
 
 function combinedSourceText() {
-  return uploadedFiles
-    .filter(f => f.text)
-    .map(f => `--- ${f.name} ---\n${f.text}`)
-    .join('\n\n');
+  return uploadedFiles.filter(f => f.text).map(f => `--- ${f.name} ---\n${f.text}`).join('\n\n');
 }
 
 function startNewSession() {
@@ -413,45 +453,56 @@ function startNewSession() {
   chatContainer.innerHTML = "";
   stickyInput.value = "";
   updateStickyVisibility();
+  highlightActiveSession(null);
 }
 
 document.getElementById('newBtn').addEventListener('click', () => {
   startNewSession();
   renderGenerateState();
+  sidebar.classList.remove('open');
+  sidebarOverlay.classList.add('hidden');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
-document.getElementById('historyBtn').addEventListener('click', async () => {
-  historyList.innerHTML = '<p style="color:var(--muted); font-size:.85rem;">Loading...</p>';
-  historyModal.classList.remove('hidden');
+function highlightActiveSession(id) {
+  historyList.querySelectorAll('.sidebar-history-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.id === id);
+  });
+}
+
+async function refreshHistory() {
   const { data, error } = await sb
     .from('sessions')
     .select('id, title, updated_at')
     .eq('user_id', currentUser.id)
     .order('updated_at', { ascending: false })
-    .limit(30);
+    .limit(50);
   if (error || !data || data.length === 0) {
-    historyList.innerHTML = '<p style="color:var(--muted); font-size:.85rem;">No past sessions yet.</p>';
+    historyList.innerHTML = '<div class="sidebar-empty">No past sessions yet.</div>';
     return;
   }
   historyList.innerHTML = "";
   data.forEach(s => {
     const div = document.createElement('div');
-    div.className = 'history-item';
-    const date = new Date(s.updated_at).toLocaleString();
-    div.innerHTML = `<div class="h-title">${escapeHtml(s.title || "Untitled session")}</div><div class="h-date">${date}</div>`;
-    div.onclick = () => loadSession(s.id);
+    div.className = 'sidebar-history-item';
+    div.dataset.id = s.id;
+    div.innerHTML = `<span class="h-title">${escapeHtml(s.title || "Untitled session")}</span><span class="h-delete" title="Delete">🗑</span>`;
+    div.querySelector('.h-title').addEventListener('click', () => loadSession(s.id));
+    div.querySelector('.h-delete').addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteSession(s.id);
+    });
     historyList.appendChild(div);
   });
-});
+  if (currentSessionId) highlightActiveSession(currentSessionId);
+}
 
-document.getElementById('closeHistory').addEventListener('click', () => {
-  historyModal.classList.add('hidden');
-});
-
-historyModal.addEventListener('click', (e) => {
-  if (e.target === historyModal) historyModal.classList.add('hidden');
-});
+async function deleteSession(id) {
+  if (!confirm("Delete this session? This can't be undone.")) return;
+  await sb.from('sessions').delete().eq('id', id);
+  if (currentSessionId === id) startNewSession();
+  refreshHistory();
+}
 
 async function loadSession(id) {
   const { data, error } = await sb.from('sessions').select('*').eq('id', id).single();
@@ -465,8 +516,10 @@ async function loadSession(id) {
   if (lastGeneratedData) renderOutput(lastGeneratedData, false);
   if (chatHistory.length > 0) renderChat();
   notesInput.placeholder = "Ask a follow-up question, or leave blank and click Generate to see the guide again.";
-  historyModal.classList.add('hidden');
   updateStickyVisibility();
+  highlightActiveSession(id);
+  sidebar.classList.remove('open');
+  sidebarOverlay.classList.add('hidden');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -536,7 +589,6 @@ async function processDocFile(file) {
   } catch (err) {
     console.error(err);
     entry.status = 'error';
-    entry.text = '';
   }
   renderFileChips();
 }
@@ -553,13 +605,11 @@ async function processImgFile(file) {
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
-    const extracted = await extractTextFromImages([base64]);
-    entry.text = extracted;
+    entry.text = await extractTextFromImages([base64]);
     entry.status = 'ready';
   } catch (err) {
     console.error(err);
     entry.status = 'error';
-    entry.text = '';
   }
   renderFileChips();
 }
@@ -569,12 +619,9 @@ docInput.addEventListener('change', async () => {
   docInput.value = "";
   if (files.length === 0) return;
   genBtn.disabled = true;
-  notesInput.placeholder = "Reading files...";
-  for (const file of files) {
-    await processDocFile(file);
-  }
+  for (const file of files) await processDocFile(file);
   notesInput.placeholder = hasGeneratedOnce
-    ? "Ask a follow-up question about this, or click + New to start something fresh."
+    ? "Ask a follow-up question about this, or click + New chat to start something fresh."
     : "Files ready. Leave blank for a full study guide, or type a question about them here.";
   genBtn.disabled = false;
 });
@@ -584,18 +631,16 @@ imgInput.addEventListener('change', async () => {
   imgInput.value = "";
   if (files.length === 0) return;
   genBtn.disabled = true;
-  notesInput.placeholder = "Reading images...";
-  for (const file of files) {
-    await processImgFile(file);
-  }
+  for (const file of files) await processImgFile(file);
   notesInput.placeholder = hasGeneratedOnce
-    ? "Ask a follow-up question about this, or click + New to start something fresh."
+    ? "Ask a follow-up question about this, or click + New chat to start something fresh."
     : "Files ready. Leave blank for a full study guide, or type a question about them here.";
   genBtn.disabled = false;
 });
 
 function renderGenerateState() {
   if (!currentProfile) return;
+  if (TESTING_MODE) { genBtn.disabled = false; status.textContent = "Unlimited (testing)"; return; }
   const textLimitHit = !currentProfile.is_subscribed && currentProfile.generations_used >= FREE_LIMIT;
   if (textLimitHit && !hasGeneratedOnce) {
     genBtn.disabled = true;
@@ -643,9 +688,19 @@ async function saveSession() {
         updated_at: new Date().toISOString()
       }).eq('id', currentSessionId);
     }
+    refreshHistory();
   } catch (err) {
     console.error("Session save failed:", err);
   }
+}
+
+async function callGenerateAPI(payload) {
+  const response = await fetch("/api/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  return await response.json();
 }
 
 async function runGenerate(questionText) {
@@ -653,17 +708,17 @@ async function runGenerate(questionText) {
   const isFileUploaded = uploadedFiles.length > 0;
 
   if (!typedText && !isFileUploaded && !hasGeneratedOnce) {
-    status.textContent = "Paste notes, or upload documents/images first.";
+    status.textContent = "Paste notes, or attach documents/images first.";
     return;
   }
   if (!typedText && hasGeneratedOnce) {
-    status.textContent = "Type a question, or click + New to start something fresh.";
+    status.textContent = "Type a question, or click + New chat to start something fresh.";
     return;
   }
 
   const isQuestion = hasGeneratedOnce && typedText.length > 0;
 
-  if (!currentProfile.is_subscribed) {
+  if (!TESTING_MODE && !currentProfile.is_subscribed) {
     if (isFileUploaded && !hasGeneratedOnce && currentProfile.documents_used >= FREE_DOC_LIMIT) {
       showUpgradeCard("You've used your free document upload"); return;
     }
@@ -683,17 +738,22 @@ async function runGenerate(questionText) {
     const payload = { question: isQuestion ? typedText : "", history: chatHistory };
     payload.notes = hasGeneratedOnce ? currentSourceText : (isFileUploaded ? combinedSourceText() : typedText);
 
-    const response = await fetch("/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    const data = await response.json();
-    const raw = data.content.map(b => b.text || "").join("");
-
-    if (!raw) {
-      throw new Error(data.friendlyError || "No response came back. Please try again.");
+    let raw = "";
+    let lastFriendly = "";
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const data = await callGenerateAPI(payload);
+      raw = data.content.map(b => b.text || "").join("");
+      if (raw) break;
+      lastFriendly = data.friendlyError || "No response came back.";
+      const isRateLimit = data.debug?.error?.code === "rate_limit_exceeded";
+      if (isRateLimit && attempt < 3) {
+        status.innerHTML = '<span class="spinner"></span> High demand — retrying automatically...';
+        await new Promise(r => setTimeout(r, 6000));
+        continue;
+      }
+      break;
     }
+    if (!raw) throw new Error(lastFriendly || "No response came back. Please try again.");
 
     if (isQuestion) {
       chatHistory.push({ q: typedText, a: raw });
@@ -715,12 +775,12 @@ async function runGenerate(questionText) {
       renderOutput(parsed, true);
       hasGeneratedOnce = true;
       notesInput.value = "";
-      notesInput.placeholder = "Ask a follow-up question about this, or click + New to start something fresh.";
+      notesInput.placeholder = "Ask a follow-up question about this, or click + New chat to start something fresh.";
       await saveSession();
       updateStickyVisibility();
     }
 
-    if (!currentProfile.is_subscribed) {
+    if (!TESTING_MODE && !currentProfile.is_subscribed) {
       const updates = {};
       if (!isQuestion) {
         if (isFileUploaded) updates.documents_used = currentProfile.documents_used + 1;
@@ -744,17 +804,13 @@ async function runGenerate(questionText) {
 }
 
 genBtn.addEventListener('click', () => runGenerate());
-
 stickySend.addEventListener('click', () => {
   const q = stickyInput.value.trim();
   if (!q) return;
   runGenerate(q);
 });
 stickyInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    stickySend.click();
-  }
+  if (e.key === 'Enter') { e.preventDefault(); stickySend.click(); }
 });
 
 function renderChat() {
@@ -768,7 +824,6 @@ function renderChat() {
 
 function renderOutput(data, clearChat) {
   let html = "";
-
   if (data.code && data.code.content) {
     html += `<div class="section">
       <div class="section-title"><span class="section-title-left">Code</span></div>
@@ -778,7 +833,6 @@ function renderOutput(data, clearChat) {
       </div>
     </div>`;
   }
-
   html += `<div class="section">
     <div class="section-title">
       <span class="section-title-left">${data.code ? "Explanation" : "Study guide"}</span>
@@ -808,7 +862,7 @@ function renderOutput(data, clearChat) {
 }
 
 function downloadPDF() {
-  if (!currentProfile.is_subscribed) { showUpgradeCard("Downloads are a paid feature"); return; }
+  if (!TESTING_MODE && !currentProfile.is_subscribed) { showUpgradeCard("Downloads are a paid feature"); return; }
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   let y = 20;
