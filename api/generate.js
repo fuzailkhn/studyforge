@@ -22,14 +22,19 @@ async function webSearch(query) {
 }
 
 export default async function handler(req, res) {
-  const { notes, question, images, history, extractOnly } = req.body;
+  const { notes, question, images, history, extractOnly, sourceType } = req.body;
 
   const hasImages = images && images.length > 0;
   const isChat = question && question.length > 0;
+  const isTypedTopic = !isChat && sourceType !== 'file' && notes && notes.length < 500;
 
   let searchContext = "";
-  if (isChat && !hasImages) {
-    searchContext = await webSearch(question);
+  if (!hasImages && !extractOnly) {
+    if (isChat) {
+      searchContext = await webSearch(question);
+    } else if (isTypedTopic) {
+      searchContext = await webSearch(notes);
+    }
   }
 
   let promptText;
@@ -40,16 +45,15 @@ export default async function handler(req, res) {
     if (history && history.length > 0) {
       historyText = "Previous conversation:\n" + history.map(h => `Q: ${h.q}\nA: ${h.a}`).join("\n") + "\n\n";
     }
-    let searchBlock = "";
-    if (searchContext) {
-      searchBlock = `\n\nCurrent web search results (use these for anything current, recent, or beyond your training knowledge — cite sources by number like [1] when you use them):\n${searchContext}\n`;
-    }
+    let searchBlock = searchContext
+      ? `\n\nCurrent web search results (use these for anything current, recent, or beyond your training knowledge — cite sources by number like [1] when you use them):\n${searchContext}\n`
+      : "";
     promptText = `You are a study and coding assistant answering questions about the provided source material, or helping with code, or answering general questions. ${historyText}Now respond to this: "${question}"
 ${searchBlock}
 Rules:
 - If the source material answers this, prioritize it.
-- If this is about current events, recent info, or anything you're not certain about from training alone, use the web search results provided above.
-- If this involves writing, fixing, or modifying code in ANY programming language, put the COMPLETE, properly indented code inside a fenced block like: \`\`\`language\ncode here\n\`\`\`. Always give the full working code, not just a snippet, even when asked to change something.
+- If this is about current events, recent info, or anything you're not certain about from training alone, rely on the web search results provided above rather than guessing from memory.
+- If this involves writing, fixing, or modifying code in ANY programming language, put the COMPLETE, properly indented code inside a fenced block like: \`\`\`language\ncode here\n\`\`\`.
 - Reply in clear formatted text (markdown is fine — headings, bold, tables, lists), no JSON.`;
   } else if (hasImages) {
     promptText = `You are a study assistant. Look at these image(s) and do two things:
@@ -59,15 +63,18 @@ Return ONLY valid JSON in this EXACT shape, every flashcard a plain {"q":"...","
 {"extractedText":"...", "guide":[{"heading":"...", "points":["...","..."]}], "flashcards":[{"q":"...","a":"..."},{"q":"...","a":"..."}]}
 Make the guide 5-7 sections with 3-5 points each. Make 8-12 flashcards.`;
   } else {
-    promptText = `You are a study and coding assistant. The user's request may be to write/explain code in any programming language, OR to study notes/a topic. Decide which it is.
-
+    let searchBlock = searchContext
+      ? `\n\nCurrent web search results — use these as the source of truth for anything current, recent, or beyond your training knowledge (cite sources by number like [1] in the guide points where relevant):\n${searchContext}\n`
+      : "";
+    promptText = `You are a study and coding assistant. The user's request may be to write/explain code in any programming language, OR to study notes/a topic — including questions about current or recent events, which you should answer using the web search results provided if given. Decide what fits.
+${searchBlock}
 Return ONLY valid JSON in this EXACT shape:
 {"code": {"language":"...", "content":"..."} or null, "guide":[{"heading":"...", "points":["...","..."]}], "flashcards":[{"q":"...","a":"..."},{"q":"...","a":"..."}]}
 
 Rules:
-- If the request is about writing/explaining code: put the COMPLETE, properly indented, working code in "code.content", set "code.language" to the language name. Still include a short "guide" (2-4 sections) explaining how the code works, and flashcards testing understanding of it.
-- If the request is NOT about code: set "code" to null, and build a normal thorough study guide (5-7 sections, 3-5 points each) and 8-12 flashcards from the material.
-- Never put code inside "guide" points — code always goes in the "code" field only.`;
+- If the request is about writing/explaining code: put the COMPLETE code in "code.content", set "code.language". Still include a short "guide" (2-4 sections) and flashcards about it.
+- If the request is NOT about code: set "code" to null, build a thorough study guide (5-7 sections, 3-5 points each) and 8-12 flashcards. If web search results are provided above, base current/factual claims on them, not on memory.
+- Never put code inside "guide" points.`;
   }
 
   const useImages = hasImages && !isChat;
